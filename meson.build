@@ -172,7 +172,7 @@ libtwl_dep = declare_dependency(
 )
 
 meson.override_dependency('NitroSDK', libtwl_dep)
-meson.override_dependency('TWLSDK', libtwl_dep)
+meson.override_dependency('TwlSDK', libtwl_dep)
 
 if(get_option('standalone') == true)
     subdir('standalone')
