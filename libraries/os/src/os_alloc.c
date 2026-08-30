@@ -1,0 +1,1489 @@
+#include <nitro/os.h>
+#include <nitro/os/common/alloc.h>
+
+#define OS_ERR_ALLOCFROMHEAP_NOHEAP                                            \
+  "OS_AllocFromHeap(): heap is not initialized."
+#define OS_ERR_ALLOCFROMHEAP_INVSIZE "OS_AllocFromHeap(): invalid size."
+#define OS_ERR_ALLOCFROMHEAP_INVHEAP "OS_AllocFromHeap(): invalid heap handle."
+#define OS_ERR_ALLOCFROMHEAP_BROKENHEAP "OS_AllocFromHeap(): heap is broken."
+#define OS_ERR_ALLOCFIXED_NOHEAP "OS_AllocFixed(): heap is not initialized."
+#define OS_ERR_ALLOCFIXED_INVRANGE "OS_AllocFixed(): invalid range."
+#define OS_ERR_FREETOHEAP_NOHEAP "OS_FreeToHeap(): heap is not initialized."
+#define OS_ERR_FREETOHEAP_INVPTR "OS_FreeToHeap(): invalid pointer."
+#define OS_ERR_FREETOHEAP_INVHEAP "OS_FreeToHeap(): invalid heap handle."
+#define OS_ERR_SETCURRENTHEAP_NOHEAP                                           \
+  "OS_SetCurrentHeap(): heap is not initialized."
+#define OS_ERR_SETCURRENTHEAP_INVHEAP                                          \
+  "OS_SetCurrentHeap(): invalid heap handle."
+#define OS_ERR_INITALLOC_INVNUMHEAPS "OS_InitAlloc(): invalid number of heaps."
+#define OS_ERR_INITALLOC_INVRANGE "OS_InitAlloc(): invalid range."
+#define OS_ERR_INITALLOC_INSRANGE "OS_InitAlloc(): too small range."
+#define OS_ERR_CLEARALLOC_INVID "OS_ClearAlloc(): invalid arena id."
+#define OS_ERR_CREATEHEAP_NOHEAP "OS_CreateHeap(): heap is not initialized."
+#define OS_ERR_CREATEHEAP_INVRANGE "OS_CreateHeap(): invalid range."
+#define OS_ERR_CREATEHEAP_INSRANGE "OS_CreateHeap(): too small range."
+#define OS_ERR_DESTROYHEAP_NOHEAP "OS_DestroyHeap(): heap is not initialized."
+#define OS_ERR_DESTROYHEAP_INVHEAP "OS_DestroyHeap(): invalid heap handle."
+#define OS_ERR_ADDTOHEAP_NOHEAP "OS_AddToHeap(): heap is not initialized."
+#define OS_ERR_ADDTOHEAP_INVHEAP "OS_AddToHeap(): invalid heap handle."
+#define OS_ERR_ADDTOHEAP_INVRANGE "OS_AddToHeap(): invalid range."
+#define OS_ERR_ADDTOHEAP_INSRANGE "OS_AddToHeap(): too small range."
+#define OS_ERR_REFERENT_NOHEAP "OS_ReferentSize(): heap is not initialized."
+#define OS_ERR_REFERENT_INVPTR "OS_ReferentSize(): invalid pointer."
+#define OS_ERR_DUMPHEAP_NOHEAP "OS_DumpHeap(): heap is not initialized."
+#define OS_ERR_DUMPHEAP_INVHEAP "OS_DumpHeap(): invalid heap handle."
+#define OS_ERR_DUMPHEAP_BROKENHEAP "OS_DumpHeap(): heap is broken."
+#define OS_ERR_ALLOCFROMHEAP_INVID "OS_AllocFromHeap(): illegal arena id."
+#define OS_ERR_ALLOCFROMHEAP_NOINFO "OS_AllocFromHeap(): heap not initialized."
+#define OS_ERR_ALLOCFIXED_INVID "OS_AllocFixed(): illegal arena id."
+#define OS_ERR_ALLOCFIXED_NOINFO "OS_AllocFixed(): heap not initialized."
+#define OS_ERR_FREETOHEAP_INVID "OS_FreeToHeap(): illegal arena id."
+#define OS_ERR_FREETOHEAP_NOINFO "OS_FreeToHeap(): heap not initialized."
+#define OS_ERR_SETCURRENTHEAP_INVID "OS_SetCurrentHeap(): illegal arena id."
+#define OS_ERR_SETCURRENTHEAP_NOINFO                                           \
+  "OS_SetCurrentHeap(): heap not initialized."
+#define OS_ERR_INITALLOC_INVID "OS_SetInitAlloc(): illegal arena id."
+#define OS_ERR_INITALLOC_INVINFO "OS_SetInitAlloc(): heap already initialized."
+#define OS_ERR_CREATEHEAP_INVID "OS_CreateHeap(): illegal arena id."
+#define OS_ERR_CREATEHEAP_NOINFO "OS_CreateHeap(): heap not initialized."
+#define OS_ERR_DESTROYHEAP_INVID "OS_DestroyHeap(): illegal arena id."
+#define OS_ERR_DESTROYHEAP_NOINFO "OS_DestroyHeap(): heap not initialized."
+#define OS_ERR_ADDTOHEAP_INVID "OS_AddToHeap(): illegal arena id."
+#define OS_ERR_ADDTOHEAP_NOINFO "OS_AddToHeap(): heap not initialized."
+#define OS_ERR_CHECKHEAP_INVID "OS_CheckHeap(): illegal arena id."
+#define OS_ERR_CHECKHEAP_NOINFO "OS_CheckHeap(): heap not initialized."
+#define OS_ERR_REFERENTSIZE_INVID "OS_ReferentSize(): illegal arena id."
+#define OS_ERR_REFERENTSIZE_NOINFO "OS_ReferrentSize(): heap not initialized."
+#define OS_ERR_DUMPHEAP_INVID "OS_DumpHeap(): illegal arena id."
+#define OS_ERR_DUMPHEAP_NOINFO "OS_DumpHeap(): heap not initialized."
+#define OS_ERR_VISITALLOCATED_INVID "OS_VisitAllocated(): illegal arena id."
+#define OS_ERR_VISITALLOCATED_NOINFO                                           \
+  "OS_VisitAllocated(): heap not initialized."
+
+#define OFFSET(n, a) (((u32)(n)) & ((a) - 1))
+#define TRUNC(n, a) (((u32)(n)) & ~((a) - 1))
+#define ROUND(n, a) (((u32)(n) + (a) - 1) & ~((a) - 1))
+
+#define ALIGNMENT 32                        // alignment in bytes
+#define MINOBJSIZE (HEADERSIZE + ALIGNMENT) // smallest object
+#define HEADERSIZE ROUND(sizeof(Cell), ALIGNMENT)
+
+#define InRange(targ, a, b) ((u32)(a) <= (u32)(targ) && (u32)(targ) < (u32)(b))
+
+#define RangeOverlap(aStart, aEnd, bStart, bEnd)                               \
+  ((u32)(bStart) <= (u32)(aStart) && (u32)(aStart) < (u32)(bEnd) ||            \
+   (u32)(bStart) < (u32)(aEnd) && (u32)(aEnd) <= (u32)(bEnd))
+
+#define RangeSubset(aStart, aEnd, bStart, bEnd)                                \
+  ((u32)(bStart) <= (u32)(aStart) && (u32)(aEnd) <= (u32)(bEnd))
+
+typedef struct Cell Cell;
+typedef struct HeapDesc HeapDesc;
+
+struct Cell {
+  Cell *prev;
+  Cell *next;
+  long size; // size of object plus HEADERSIZE
+
+#ifdef SDK_DEBUG
+  HeapDesc *hd; // from which the block is allocated
+
+  long requested; // size of object to have been requested
+#endif            // SDK_DEBUG
+};
+
+struct HeapDesc {
+  long size; // if -1 then heap is free. Note OS_AllocFixed()
+
+  Cell *free;      // pointer to the first free cell
+  Cell *allocated; // pointer to the first used cell
+
+#ifdef SDK_DEBUG
+  u32 paddingBytes;
+  u32 headerBytes;
+  u32 payloadBytes;
+#endif // SDK_DEBUG
+};
+
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+static OSArenaId OSi_ExtraHeapArenaId = (OSArenaId)-1;
+static OSHeapHandle OSi_ExtraHeapHandle = -1;
+#endif
+
+typedef struct {
+
+  volatile OSHeapHandle currentHeap;
+  int numHeaps;
+  void *arenaStart;
+  void *arenaEnd;
+  HeapDesc *heapArray;
+} OSHeapInfo;
+
+void *OSiHeapInfo[OS_ARENA_MAX] = {
+    NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL}; // because OS_ARENA_MAX = 9
+
+static Cell *DLAddFront(Cell *list, Cell *cell) {
+  cell->next = list;
+  cell->prev = NULL;
+  if (list) {
+    list->prev = cell;
+  }
+  return cell;
+}
+
+static Cell *DLLookup(Cell *list, Cell *cell) {
+  for (; list; list = list->next) {
+    if (list == cell) {
+      return list;
+    }
+  }
+  return NULL;
+}
+
+static Cell *DLExtract(Cell *list, Cell *cell) {
+  if (cell->next) {
+    cell->next->prev = cell->prev;
+  }
+
+  if (cell->prev == NULL) {
+    return cell->next;
+  } else {
+    cell->prev->next = cell->next;
+    return list;
+  }
+}
+
+static Cell *DLInsert(Cell *list, Cell *cell) {
+  Cell *prev;
+  Cell *next;
+
+  for (next = list, prev = NULL; next; prev = next, next = next->next) {
+    if (cell <= next) {
+      break;
+    }
+  }
+
+  cell->next = next;
+  cell->prev = prev;
+  if (next) {
+    next->prev = cell;
+    if ((char *)cell + cell->size == (char *)next) {
+
+      cell->size += next->size;
+      cell->next = next = next->next;
+      if (next) {
+        next->prev = cell;
+      }
+    }
+  }
+  if (prev) {
+    prev->next = cell;
+    if ((char *)prev + prev->size == (char *)cell) {
+
+      prev->size += cell->size;
+      prev->next = next;
+      if (next) {
+        next->prev = prev;
+      }
+    }
+    return list;
+  } else {
+    return cell; // cell becomes new head of list
+  }
+}
+
+static BOOL DLOverlap(Cell *list, void *start, void *end) {
+  Cell *cell;
+
+  for (cell = list; cell; cell = cell->next) {
+    if (RangeOverlap(cell, (char *)cell + cell->size, start, end)) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static long DLSize(Cell *list) {
+  Cell *cell;
+  long size = 0;
+
+  for (cell = list; cell; cell = cell->next) {
+    size += cell->size;
+  }
+  return size;
+}
+
+void *OS_AllocFromHeap(OSArenaId id, OSHeapHandle heap, u32 size) {
+  OSHeapInfo *heapInfo;
+  HeapDesc *hd;
+  Cell *cell;        // candidate block
+  Cell *newCell;     // ptr to leftover block
+  long leftoverSize; // size of any leftover
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+#ifdef SDK_DEBUG
+  long requested = (long)size;
+#endif // SDK_DEBUG
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_ALLOCFROMHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_ALLOCFROMHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  if (!heapInfo) {
+    (void)OS_RestoreInterrupts(enabled);
+    return NULL;
+  }
+
+  if (heap < 0) {
+    heap = heapInfo->currentHeap;
+  }
+
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_ALLOCFROMHEAP_NOHEAP);
+  SDK_TASSERTMSG(0 < ((long)size), OS_ERR_ALLOCFROMHEAP_INVSIZE);
+  SDK_TASSERTMSG(0 <= heap && heap < heapInfo->numHeaps,
+                 OS_ERR_ALLOCFROMHEAP_INVHEAP);
+  SDK_TASSERTMSG(0 <= heapInfo->heapArray[heap].size,
+                 OS_ERR_ALLOCFROMHEAP_INVHEAP);
+
+  hd = &heapInfo->heapArray[heap];
+
+  size += HEADERSIZE;
+  size = ROUND(size, ALIGNMENT);
+
+  for (cell = hd->free; cell != NULL; cell = cell->next) {
+    if ((long)size <= cell->size) {
+      break;
+    }
+  }
+
+  if (cell == NULL) {
+#ifdef SDK_DEBUG
+    OS_TPrintf("OS_AllocFromHeap: Warning- failed to allocate %d bytes\n",
+               size);
+#endif // SDK_DEBUG
+    (void)OS_RestoreInterrupts(enabled);
+    return NULL;
+  }
+
+  SDK_TASSERTMSG(OFFSET(cell, ALIGNMENT) == 0, OS_ERR_ALLOCFROMHEAP_BROKENHEAP);
+  SDK_TASSERTMSG(cell->hd == NULL, OS_ERR_ALLOCFROMHEAP_BROKENHEAP);
+
+  leftoverSize = cell->size - (long)size;
+  if (leftoverSize < MINOBJSIZE) {
+
+    hd->free = DLExtract(hd->free, cell);
+  } else {
+
+    cell->size = (long)size;
+
+    newCell = (Cell *)((char *)cell + size);
+    newCell->size = leftoverSize;
+#ifdef SDK_DEBUG
+    newCell->hd = NULL;
+#endif
+
+    newCell->prev = cell->prev;
+    newCell->next = cell->next;
+
+    if (newCell->next != NULL) {
+      newCell->next->prev = newCell;
+    }
+
+    if (newCell->prev != NULL) {
+      newCell->prev->next = newCell;
+    } else {
+      SDK_TASSERTMSG(hd->free == cell, OS_ERR_ALLOCFROMHEAP_BROKENHEAP);
+      hd->free = newCell;
+    }
+  }
+
+  hd->allocated = DLAddFront(hd->allocated, cell);
+
+#ifdef SDK_DEBUG
+  cell->hd = hd;
+  cell->requested = requested;
+  hd->headerBytes += HEADERSIZE;
+  hd->paddingBytes += cell->size - (HEADERSIZE + requested);
+  hd->payloadBytes += requested;
+#endif // SDK_DEBUG
+
+  (void)OS_RestoreInterrupts(enabled);
+
+  return (void *)((char *)cell + HEADERSIZE);
+}
+
+void *OS_AllocFixed(OSArenaId id, void **rstart, void **rend) {
+  OSHeapInfo *heapInfo;
+  OSHeapHandle i; // heap iterator
+  Cell *cell;     // object iterator
+  Cell *newCell;  // for creating new objects if necessary
+  HeapDesc *hd;
+  void *start = (void *)TRUNC(*rstart, ALIGNMENT);
+  void *end = (void *)ROUND(*rend, ALIGNMENT);
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_ALLOCFIXED_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_ALLOCFIXED_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_ALLOCFIXED_NOHEAP);
+  SDK_TASSERTMSG(start < end, OS_ERR_ALLOCFIXED_INVRANGE);
+  SDK_TASSERTMSG(
+      RangeSubset(start, end, heapInfo->arenaStart, heapInfo->arenaEnd),
+      OS_ERR_ALLOCFIXED_INVRANGE);
+
+  for (i = 0; i < heapInfo->numHeaps; i++) {
+    hd = &heapInfo->heapArray[i];
+    if (hd->size < 0) // Is inactive?
+    {
+      continue;
+    }
+
+    if (DLOverlap(hd->allocated, start, end)) {
+#ifdef SDK_DEBUG
+      OS_TPrintf("OS_AllocFixed: Warning - failed to allocate from %p to %p\n",
+                 start, end);
+#endif // SDK_DEBUG
+      (void)OS_RestoreInterrupts(enabled);
+      return NULL;
+    }
+  }
+
+  for (i = 0; i < heapInfo->numHeaps; i++) {
+
+    hd = &heapInfo->heapArray[i];
+
+    if (hd->size < 0) // Is inactive?
+    {
+      continue;
+    }
+
+    for (cell = hd->free; cell; cell = cell->next) {
+      void *cellEnd = (char *)cell + cell->size;
+
+      if ((char *)cellEnd <= (char *)start) {
+        continue;
+      }
+
+      if ((char *)end <= (char *)cell) {
+        break; // Since free is sorted in order of start addresses
+      }
+
+      if (InRange(cell, (char *)start - HEADERSIZE, end) &&
+          InRange((char *)cellEnd, start, (char *)end + MINOBJSIZE)) {
+        if ((char *)cell < (char *)start) {
+          start = (void *)cell;
+        }
+        if ((char *)end < (char *)cellEnd) {
+          end = (void *)cellEnd;
+        }
+
+        hd->free = DLExtract(hd->free, cell); // Note cell->next is intact. XXX
+        hd->size -= cell->size;               // Update stats
+        continue;
+      }
+
+      if (InRange(cell, (char *)start - HEADERSIZE, end)) {
+        if ((char *)cell < (char *)start) {
+          start = (void *)cell;
+        }
+
+        SDK_ASSERT(MINOBJSIZE <= (char *)cellEnd - (char *)end);
+        newCell = (Cell *)end;
+        newCell->size = (char *)cellEnd - (char *)end;
+#ifdef SDK_DEBUG
+        newCell->hd = NULL;
+#endif // SDK_DEBUG
+        newCell->next = cell->next;
+        if (newCell->next) {
+          newCell->next->prev = newCell;
+        }
+        newCell->prev = cell->prev;
+        if (newCell->prev) {
+          newCell->prev->next = newCell;
+        } else {
+          hd->free = newCell; // new head
+        }
+        hd->size -= (char *)end - (char *)cell;
+        break;
+      }
+
+      if (InRange((char *)cellEnd, start, (char *)end + MINOBJSIZE)) {
+        if ((char *)end < (char *)cellEnd) {
+          end = (void *)cellEnd;
+        }
+
+        SDK_ASSERT(MINOBJSIZE <= (char *)start - (char *)cell);
+        hd->size -= (char *)cellEnd - (char *)start;
+        cell->size = (char *)start - (char *)cell;
+        continue;
+      }
+
+      SDK_ASSERT(MINOBJSIZE <= (char *)cellEnd - (char *)end);
+      newCell = (Cell *)end;
+      newCell->size = (char *)cellEnd - (char *)end;
+#ifdef SDK_DEBUG
+      newCell->hd = NULL;
+#endif // SDK_DEBUG
+      newCell->next = cell->next;
+      if (newCell->next) {
+        newCell->next->prev = newCell;
+      }
+      newCell->prev = cell;
+      cell->next = newCell; // cell is before newCell
+      cell->size = (char *)start - (char *)cell;
+      hd->size -= (char *)end - (char *)start;
+      break;
+    }
+    SDK_ASSERT(0 <= hd->size);
+  }
+
+  SDK_ASSERT(OFFSET(start, ALIGNMENT) == 0);
+  SDK_ASSERT(OFFSET(end, ALIGNMENT) == 0);
+  SDK_ASSERT(start < end);
+  *rstart = start;
+  *rend = end;
+
+  (void)OS_RestoreInterrupts(enabled);
+  return *rstart;
+}
+
+void OS_FreeToHeap(OSArenaId id, OSHeapHandle heap, void *ptr) {
+  OSHeapInfo *heapInfo;
+  HeapDesc *hd;
+  Cell *cell;
+
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_FREETOHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_FREETOHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  if (heap < 0) {
+    heap = heapInfo->currentHeap;
+  }
+
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_FREETOHEAP_NOHEAP);
+#ifdef SDK_DEBUG
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+  if (OSi_ExtraHeapArenaId != id || OSi_ExtraHeapHandle != heap) {
+#endif
+    SDK_TASSERTMSG(InRange(ptr, (char *)heapInfo->arenaStart + HEADERSIZE,
+                           (char *)heapInfo->arenaEnd),
+                   OS_ERR_FREETOHEAP_INVPTR);
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+  }
+#endif
+#endif
+  SDK_TASSERTMSG(OFFSET(ptr, ALIGNMENT) == 0, OS_ERR_FREETOHEAP_INVPTR);
+  SDK_TASSERTMSG(0 <= heapInfo->heapArray[heap].size,
+                 OS_ERR_FREETOHEAP_INVHEAP);
+
+  cell = (Cell *)((char *)ptr - HEADERSIZE);
+  hd = &heapInfo->heapArray[heap];
+
+  SDK_TASSERTMSG(cell->hd == hd, OS_ERR_FREETOHEAP_INVPTR);
+  SDK_TASSERTMSG(DLLookup(hd->allocated, cell), OS_ERR_FREETOHEAP_INVPTR);
+
+#ifdef SDK_DEBUG
+  cell->hd = NULL;
+  hd->headerBytes -= HEADERSIZE;
+  hd->paddingBytes -= cell->size - (HEADERSIZE + cell->requested);
+  hd->payloadBytes -= cell->requested;
+#endif // SDK_DEBUG
+
+  hd->allocated = DLExtract(hd->allocated, cell);
+
+  hd->free = DLInsert(hd->free, cell);
+
+  (void)OS_RestoreInterrupts(enabled);
+}
+
+void OS_FreeAllToHeap(OSArenaId id, OSHeapHandle heap) {
+  OSHeapInfo *heapInfo;
+  HeapDesc *hd;
+  Cell *cell;
+
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_FREETOHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_FREETOHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  if (heap < 0) {
+    heap = heapInfo->currentHeap;
+  }
+
+  SDK_TASSERTMSG(heapInfo->heapArray, "heap not initialized");
+  SDK_TASSERTMSG(0 <= heapInfo->heapArray[heap].size, "invalid heap handle");
+
+  hd = &heapInfo->heapArray[heap];
+  while ((cell = hd->allocated) != NULL) {
+    SDK_ASSERT(cell->hd == hd);
+    SDK_ASSERT(DLLookup(hd->allocated, cell));
+
+#ifdef SDK_DEBUG
+    cell->hd = NULL;
+    hd->headerBytes -= HEADERSIZE;
+    hd->paddingBytes -= cell->size - (HEADERSIZE + cell->requested);
+    hd->payloadBytes -= cell->requested;
+#endif // SDK_DEBUG
+
+    hd->allocated = DLExtract(hd->allocated, cell);
+
+    hd->free = DLInsert(hd->free, cell);
+  }
+
+  (void)OS_RestoreInterrupts(enabled);
+}
+
+OSHeapHandle OS_SetCurrentHeap(OSArenaId id, OSHeapHandle heap) {
+  OSHeapInfo *heapInfo;
+  OSHeapHandle prev;
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_SETCURRENTHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_SETCURRENTHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_SETCURRENTHEAP_NOHEAP);
+  SDK_TASSERTMSG(0 <= heap && heap < heapInfo->numHeaps,
+                 OS_ERR_SETCURRENTHEAP_INVHEAP);
+  SDK_TASSERTMSG(0 <= heapInfo->heapArray[heap].size,
+                 OS_ERR_SETCURRENTHEAP_INVHEAP);
+  prev = heapInfo->currentHeap;
+  heapInfo->currentHeap = heap;
+
+  (void)OS_RestoreInterrupts(enabled);
+  return prev;
+}
+
+void *OS_InitAlloc(OSArenaId id, void *arenaStart, void *arenaEnd,
+                   int maxHeaps) {
+  OSHeapInfo *heapInfo;
+  u32 arraySize;
+  OSHeapHandle i;
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_INITALLOC_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id] == NULL, OS_ERR_INITALLOC_INVINFO);
+
+  SDK_TASSERTMSG(0 < maxHeaps, OS_ERR_INITALLOC_INVNUMHEAPS);
+  SDK_TASSERTMSG((char *)arenaStart < (char *)arenaEnd,
+                 OS_ERR_INITALLOC_INVRANGE);
+  SDK_TASSERTMSG(maxHeaps <=
+                     ((char *)arenaEnd - (char *)arenaStart) / sizeof(HeapDesc),
+                 OS_ERR_INITALLOC_INSRANGE);
+
+  heapInfo = arenaStart;
+  OSiHeapInfo[id] = heapInfo;
+
+  arraySize = sizeof(HeapDesc) * maxHeaps;
+  heapInfo->heapArray = (void *)((u32)arenaStart + sizeof(OSHeapInfo));
+  heapInfo->numHeaps = maxHeaps;
+
+  for (i = 0; i < heapInfo->numHeaps; i++) {
+    HeapDesc *hd = &heapInfo->heapArray[i];
+
+    hd->size = -1;
+    hd->free = hd->allocated = NULL;
+#ifdef SDK_DEBUG
+    hd->paddingBytes = hd->headerBytes = hd->payloadBytes = 0;
+#endif // SDK_DEBUG
+  }
+
+  heapInfo->currentHeap = -1;
+
+  arenaStart = (void *)((char *)heapInfo->heapArray + arraySize);
+  arenaStart = (void *)ROUND(arenaStart, ALIGNMENT);
+
+  heapInfo->arenaStart = arenaStart;
+  heapInfo->arenaEnd = (void *)TRUNC(arenaEnd, ALIGNMENT);
+  SDK_TASSERTMSG(MINOBJSIZE <=
+                     (char *)heapInfo->arenaEnd - (char *)heapInfo->arenaStart,
+                 OS_ERR_INITALLOC_INSRANGE);
+
+  (void)OS_RestoreInterrupts(enabled);
+  return heapInfo->arenaStart;
+}
+
+void OS_ClearAlloc(OSArenaId id) {
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_CLEARALLOC_INVID);
+  OSiHeapInfo[id] = NULL;
+}
+
+OSHeapHandle OS_CreateHeap(OSArenaId id, void *start, void *end) {
+  OSHeapInfo *heapInfo;
+  OSHeapHandle heap;
+  HeapDesc *hd;
+  Cell *cell;
+
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_CREATEHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_CREATEHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_CREATEHEAP_NOHEAP);
+  SDK_TASSERTMSG(start < end, OS_ERR_CREATEHEAP_INVRANGE);
+  start = (void *)ROUND(start, ALIGNMENT);
+  end = (void *)TRUNC(end, ALIGNMENT);
+  SDK_TASSERTMSG(start < end, OS_ERR_CREATEHEAP_INVRANGE);
+  SDK_TASSERTMSG(
+      RangeSubset(start, end, heapInfo->arenaStart, heapInfo->arenaEnd),
+      OS_ERR_CREATEHEAP_INVRANGE);
+  SDK_TASSERTMSG(MINOBJSIZE <= (char *)end - (char *)start,
+                 OS_ERR_CREATEHEAP_INSRANGE);
+
+#ifdef SDK_DEBUG
+
+  for (heap = 0; heap < heapInfo->numHeaps; heap++) {
+    if (heapInfo->heapArray[heap].size < 0) {
+      continue;
+    }
+    SDK_TASSERTMSG(!DLOverlap(heapInfo->heapArray[heap].free, start, end),
+                   OS_ERR_CREATEHEAP_INVRANGE);
+    SDK_TASSERTMSG(!DLOverlap(heapInfo->heapArray[heap].allocated, start, end),
+                   OS_ERR_CREATEHEAP_INVRANGE);
+  }
+#endif // SDK_DEBUG
+
+  for (heap = 0; heap < heapInfo->numHeaps; heap++) {
+    hd = &heapInfo->heapArray[heap];
+    if (hd->size < 0) {
+      hd->size = (char *)end - (char *)start;
+
+      cell = (Cell *)start;
+      cell->prev = NULL;
+      cell->next = NULL;
+      cell->size = hd->size;
+#ifdef SDK_DEBUG
+      cell->hd = NULL;
+#endif // SDK_DEBUG
+
+      hd->free = cell;
+      hd->allocated = 0;
+#ifdef SDK_DEBUG
+      hd->paddingBytes = hd->headerBytes = hd->payloadBytes = 0;
+#endif // SDK_DEBUG
+
+      (void)OS_RestoreInterrupts(enabled);
+      return heap;
+    }
+  }
+
+#ifdef SDK_DEBUG
+  OS_TPrintf("OS_CreateHeap: Warning - Failed to find free heap descriptor.");
+#endif // SDK_DEBUG
+
+  (void)OS_RestoreInterrupts(enabled);
+  return -1;
+}
+
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+OSHeapHandle OS_CreateExtraHeap(OSArenaId id) {
+  OSHeapInfo *heapInfo;
+  OSHeapHandle heap;
+  HeapDesc *hd;
+  Cell *cell;
+
+  OSIntrMode enabled = OS_DisableInterrupts();
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_CREATEHEAP_INVID);
+
+  heapInfo = OSiHeapInfo[id];
+  SDK_TASSERTMSG(heapInfo, OS_ERR_CREATEHEAP_NOINFO);
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_CREATEHEAP_NOHEAP);
+
+  if (!OS_IsRunOnTwl() && OSi_ExtraHeapHandle < 0) {
+
+    for (heap = 0; heap < heapInfo->numHeaps; heap++) {
+      hd = &heapInfo->heapArray[heap];
+      if (hd->size < 0) {
+        hd->size = HW_MAIN_MEM_PARAMETER_BUF_SIZE;
+
+        cell = (Cell *)HW_MAIN_MEM_PARAMETER_BUF;
+        cell->prev = NULL;
+        cell->next = NULL;
+        cell->size = HW_MAIN_MEM_PARAMETER_BUF_SIZE;
+#ifdef SDK_DEBUG
+        cell->hd = NULL;
+#endif
+        hd->free = cell;
+        hd->allocated = 0;
+#ifdef SDK_DEBUG
+        hd->paddingBytes = hd->headerBytes = hd->payloadBytes = 0;
+#endif
+        OSi_ExtraHeapArenaId = id;
+        OSi_ExtraHeapHandle = heap;
+
+        (void)OS_RestoreInterrupts(enabled);
+        return heap;
+      }
+    }
+  }
+
+  (void)OS_RestoreInterrupts(enabled);
+  return -1;
+}
+#endif // defined(SDK_TWL) && !defined(SDK_TWLLTD)
+
+void OS_DestroyHeap(OSArenaId id, OSHeapHandle heap) {
+  OSHeapInfo *heapInfo;
+  HeapDesc *hd;
+#ifdef SDK_DEBUG
+  long size;
+#endif
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_DESTROYHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_DESTROYHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_DESTROYHEAP_NOHEAP);
+  SDK_TASSERTMSG(0 <= heap && heap < heapInfo->numHeaps,
+                 OS_ERR_DESTROYHEAP_INVHEAP);
+  SDK_TASSERTMSG(0 <= heapInfo->heapArray[heap].size,
+                 OS_ERR_DESTROYHEAP_INVHEAP);
+
+  hd = &heapInfo->heapArray[heap];
+
+#ifdef SDK_DEBUG
+
+  size = DLSize(hd->free);
+  if (hd->size != size) {
+    OS_TPrintf(
+        "OS_DestroyHeap(%d): Warning - free list size %d, heap size %d\n", heap,
+        size, hd->size);
+  }
+#endif // SDK_DEBUG
+
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+
+  if (OSi_ExtraHeapArenaId == id && OSi_ExtraHeapHandle == heap) {
+    OSi_ExtraHeapArenaId = (OSArenaId)-1;
+    OSi_ExtraHeapHandle = -1;
+  }
+#endif // defined(SDK_TWL) && !defined(SDK_TWLLTD)
+
+  hd->size = -1;
+  hd->free = hd->allocated = NULL; // add to dolphin src
+
+#ifdef SDK_DEBUG
+  hd->paddingBytes = hd->headerBytes = hd->payloadBytes = 0;
+  if (heapInfo->currentHeap == heap) {
+    heapInfo->currentHeap = -1;
+  }
+#endif // SDK_DEBUG
+
+  (void)OS_RestoreInterrupts(enabled);
+}
+
+void OS_AddToHeap(OSArenaId id, OSHeapHandle heap, void *start, void *end) {
+  OSHeapInfo *heapInfo;
+  HeapDesc *hd;
+  Cell *cell;
+#ifdef SDK_DEBUG
+  OSHeapHandle i;
+#endif // SDK_DEBUG
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_ADDTOHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_ADDTOHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_ADDTOHEAP_NOHEAP);
+  SDK_TASSERTMSG(0 <= heap && heap < heapInfo->numHeaps,
+                 OS_ERR_ADDTOHEAP_INVHEAP);
+  SDK_TASSERTMSG(0 <= heapInfo->heapArray[heap].size, OS_ERR_ADDTOHEAP_INVHEAP);
+
+  hd = &heapInfo->heapArray[heap];
+
+  SDK_TASSERTMSG(start < end, OS_ERR_ADDTOHEAP_INVRANGE);
+
+  start = (void *)ROUND(start, ALIGNMENT);
+  end = (void *)TRUNC(end, ALIGNMENT);
+  SDK_TASSERTMSG(MINOBJSIZE <= (char *)end - (char *)start,
+                 OS_ERR_ADDTOHEAP_INSRANGE);
+
+#ifdef SDK_DEBUG
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+  if ((u32)start != (u32)HW_MAIN_MEM_PARAMETER_BUF &&
+      (u32)end !=
+          (u32)(HW_MAIN_MEM_PARAMETER_BUF + HW_MAIN_MEM_PARAMETER_BUF_SIZE)) {
+#endif
+    SDK_TASSERTMSG(
+        RangeSubset(start, end, heapInfo->arenaStart, heapInfo->arenaEnd),
+        OS_ERR_ADDTOHEAP_INVRANGE);
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+  }
+#endif
+#endif
+
+#ifdef SDK_DEBUG
+
+  for (i = 0; i < heapInfo->numHeaps; i++) {
+    if (heapInfo->heapArray[i].size < 0) {
+      continue;
+    }
+    SDK_TASSERTMSG(!DLOverlap(heapInfo->heapArray[i].free, start, end),
+                   OS_ERR_ADDTOHEAP_INVRANGE);
+    SDK_TASSERTMSG(!DLOverlap(heapInfo->heapArray[i].allocated, start, end),
+                   OS_ERR_ADDTOHEAP_INVRANGE);
+  }
+#endif // SDK_DEBUG
+
+  cell = (Cell *)start;
+  cell->size = (char *)end - (char *)start;
+#ifdef SDK_DEBUG
+  cell->hd = NULL;
+#endif // SDK_DEBUG
+
+  hd->size += cell->size;
+  hd->free = DLInsert(hd->free, cell);
+
+  (void)OS_RestoreInterrupts(enabled);
+}
+
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+void OS_AddExtraAreaToHeap(OSArenaId id, OSHeapHandle heap) {
+  if (!OS_IsRunOnTwl()) {
+    OS_AddToHeap(
+        id, heap, (void *)HW_MAIN_MEM_PARAMETER_BUF,
+        (void *)(HW_MAIN_MEM_PARAMETER_BUF + HW_MAIN_MEM_PARAMETER_BUF_SIZE));
+    OSi_ExtraHeapArenaId = id;
+    OSi_ExtraHeapHandle = heap;
+  }
+}
+#endif
+
+#ifndef SDK_NO_MESSAGE
+#ifdef SDK_ARM9
+#define OSi_CHECK(exp)                                                         \
+  do {                                                                         \
+    if (!(exp)) {                                                              \
+      OS_TPrintf("OS_CheckHeap: Failed " #exp " in %d\n", __LINE__);           \
+      goto exit_OS_CheckHeap; /* goto is not beautiful, but less codes */      \
+    }                                                                          \
+  } while (0)
+#else /* SDK_ARM9 */
+#define OSi_CHECK(exp)                                                         \
+  do {                                                                         \
+    if (!(exp)) {                                                              \
+      OS_TPrintf("OS_CheckHeap: Failed in %d\n", __LINE__);                    \
+      goto exit_OS_CheckHeap; /* goto is not beautiful, but less codes */      \
+    }                                                                          \
+  } while (0)
+#endif
+#else
+#define OSi_CHECK(exp)                                                         \
+  do {                                                                         \
+    if (!(exp)) {                                                              \
+      goto exit_OS_CheckHeap; /* goto is not beautiful, but less codes */      \
+    }                                                                          \
+  } while (0)
+#endif
+
+s32 OS_CheckHeap(OSArenaId id, OSHeapHandle heap) {
+  OSHeapInfo *heapInfo;
+  HeapDesc *hd;
+  Cell *cell;
+  long total = 0;
+  long free = 0;
+  long retValue = -1;
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_CHECKHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_CHECKHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  if (heap == OS_CURRENT_HEAP_HANDLE) {
+    heap = heapInfo->currentHeap;
+  }
+  SDK_ASSERT(heap >= 0);
+
+  OSi_CHECK(heapInfo->heapArray);
+  OSi_CHECK(0 <= heap && heap < heapInfo->numHeaps);
+
+  hd = &heapInfo->heapArray[heap];
+  OSi_CHECK(0 <= hd->size);
+
+  OSi_CHECK(hd->allocated == NULL || hd->allocated->prev == NULL);
+  for (cell = hd->allocated; cell; cell = cell->next) {
+#ifdef SDK_DEBUG
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+    if (OSi_ExtraHeapArenaId != id || OSi_ExtraHeapHandle != heap) {
+#endif
+      OSi_CHECK(InRange(cell, heapInfo->arenaStart, heapInfo->arenaEnd));
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+    }
+#endif
+#endif
+    OSi_CHECK(OFFSET(cell, ALIGNMENT) == 0);
+    OSi_CHECK(cell->next == NULL || cell->next->prev == cell);
+    OSi_CHECK(MINOBJSIZE <= cell->size);
+    OSi_CHECK(OFFSET(cell->size, ALIGNMENT) == 0);
+
+    total += cell->size;
+    OSi_CHECK(0 < total && total <= hd->size);
+
+#ifdef SDK_DEBUG
+    OSi_CHECK(cell->hd == hd);
+    OSi_CHECK(HEADERSIZE + cell->requested <= cell->size);
+#endif // SDK_DEBUG
+  }
+
+  OSi_CHECK(hd->free == NULL || hd->free->prev == NULL);
+  for (cell = hd->free; cell; cell = cell->next) {
+#ifdef SDK_DEBUG
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+    if (OSi_ExtraHeapArenaId != id || OSi_ExtraHeapHandle != heap) {
+#endif
+      OSi_CHECK(InRange(cell, heapInfo->arenaStart, heapInfo->arenaEnd));
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+    }
+#endif
+#endif
+    OSi_CHECK(OFFSET(cell, ALIGNMENT) == 0);
+    OSi_CHECK(cell->next == NULL || cell->next->prev == cell);
+    OSi_CHECK(MINOBJSIZE <= cell->size);
+    OSi_CHECK(OFFSET(cell->size, ALIGNMENT) == 0);
+    OSi_CHECK(cell->next == NULL ||
+              (char *)cell + cell->size < (char *)cell->next);
+
+    total += cell->size;
+    free += cell->size - HEADERSIZE;
+    OSi_CHECK(0 < total && total <= hd->size);
+
+#ifdef SDK_DEBUG
+    OSi_CHECK(cell->hd == NULL);
+#endif // SDK_DEBUG
+  }
+
+  OSi_CHECK(total == hd->size);
+  retValue = free;
+
+exit_OS_CheckHeap:
+  (void)OS_RestoreInterrupts(enabled);
+  return retValue;
+}
+
+u32 OS_ReferentSize(OSArenaId id, void *ptr) {
+  OSHeapInfo *heapInfo;
+  Cell *cell;
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_REFERENTSIZE_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_REFERENTSIZE_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  SDK_TASSERTMSG(heapInfo->heapArray, OS_ERR_REFERENT_NOHEAP);
+#ifdef SDK_DEBUG
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+  if (OSi_ExtraHeapArenaId != id) {
+#endif
+    SDK_TASSERTMSG(InRange(ptr, (char *)heapInfo->arenaStart + HEADERSIZE,
+                           (char *)heapInfo->arenaEnd),
+                   OS_ERR_REFERENT_INVPTR);
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+  }
+#endif
+#endif
+  SDK_TASSERTMSG(OFFSET(ptr, ALIGNMENT) == 0, OS_ERR_REFERENT_INVPTR);
+
+  cell = (Cell *)((char *)ptr - HEADERSIZE);
+
+  SDK_TASSERTMSG(cell->hd, OS_ERR_REFERENT_INVPTR);
+  SDK_TASSERTMSG(
+      ((char *)cell->hd - (char *)heapInfo->heapArray) % sizeof(HeapDesc) == 0,
+      OS_ERR_REFERENT_INVPTR);
+  SDK_TASSERTMSG(heapInfo->heapArray <= cell->hd &&
+                     cell->hd < &heapInfo->heapArray[heapInfo->numHeaps],
+                 OS_ERR_REFERENT_INVPTR);
+  SDK_TASSERTMSG(0 <= cell->hd->size, OS_ERR_REFERENT_INVPTR);
+  SDK_TASSERTMSG(DLLookup(cell->hd->allocated, cell), OS_ERR_REFERENT_INVPTR);
+
+  (void)OS_RestoreInterrupts(enabled);
+  return (u32)(cell->size - HEADERSIZE);
+}
+
+void OS_DumpHeap(OSArenaId id, OSHeapHandle heap) {
+#ifndef SDK_FINALROM
+  OSHeapInfo *heapInfo;
+  HeapDesc *hd;
+  Cell *cell;
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_DUMPHEAP_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_DUMPHEAP_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  SDK_TASSERTMSG(heapInfo && heapInfo->heapArray, OS_ERR_DUMPHEAP_NOHEAP);
+
+  if (heap < 0) {
+    heap = heapInfo->currentHeap;
+  }
+  SDK_TASSERTMSG(0 <= heap && heap < heapInfo->numHeaps,
+                 OS_ERR_DUMPHEAP_INVHEAP);
+
+  hd = &heapInfo->heapArray[heap];
+  if (hd->size < 0) {
+    OS_TPrintf("----Inactive\n");
+    return;
+  }
+
+  SDK_TASSERTMSG(0 <= OS_CheckHeap(id, heap), OS_ERR_DUMPHEAP_BROKENHEAP);
+
+#ifdef SDK_ARM9
+#ifdef SDK_DEBUG
+  OS_Printf("padding %d/(%f%%) header %d/(%f%%) payload %d/(%f%%)\n",
+            hd->paddingBytes, 100.0 * hd->paddingBytes / hd->size,
+            hd->headerBytes, 100.0 * hd->headerBytes / hd->size,
+            hd->payloadBytes, 100.0 * hd->payloadBytes / hd->size);
+#endif // SDK_DEBUG
+#endif /* SDK_ARM9 */
+
+  OS_TPrintf("  addr    size     end      prev     next\n");
+
+  OS_TPrintf("----Allocated\n");
+  SDK_TASSERTMSG(hd->allocated == NULL || hd->allocated->prev == NULL,
+                 OS_ERR_DUMPHEAP_BROKENHEAP);
+  if (!hd->allocated) {
+    OS_TPrintf("None.\n");
+  } else {
+    for (cell = hd->allocated; cell; cell = cell->next) {
+      OS_TPrintf("%08x %6x %08x %08x %08x\n", cell, cell->size,
+                 (char *)cell + cell->size, cell->prev, cell->next);
+    }
+  }
+
+  OS_TPrintf("----Free\n");
+  if (!hd->free) {
+    OS_TPrintf("None.\n");
+  } else {
+    for (cell = hd->free; cell; cell = cell->next) {
+      OS_TPrintf("%08x %6x %08x %08x %08x\n", cell, cell->size,
+                 (char *)cell + cell->size, cell->prev, cell->next);
+    }
+  }
+
+  (void)OS_RestoreInterrupts(enabled);
+#else // ifndef SDK_FINALROM
+
+#pragma unused(id, heap)
+
+#endif // ifndef SDK_FINALROM
+}
+
+void OS_VisitAllocated(OSArenaId id, OSAllocVisitor visitor) {
+  OSHeapInfo *heapInfo;
+  u32 heap;
+  Cell *cell;
+
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, OS_ERR_VISITALLOCATED_INVID);
+  SDK_TASSERTMSG(OSiHeapInfo[id], OS_ERR_VISITALLOCATED_NOINFO);
+  heapInfo = OSiHeapInfo[id];
+
+  for (heap = 0; heap < heapInfo->numHeaps; heap++) {
+    if (heapInfo->heapArray[heap].size >= 0) {
+      for (cell = heapInfo->heapArray[heap].allocated; cell;
+           cell = cell->next) {
+        visitor((void *)((u8 *)cell + HEADERSIZE),
+                (u32)(cell->size - HEADERSIZE));
+      }
+    }
+  }
+
+  (void)OS_RestoreInterrupts(enabled);
+}
+
+u32 OSi_GetTotalAllocSize(OSArenaId id, OSHeapHandle heap, BOOL isHeadInclude) {
+  OSHeapInfo *heapInfo;
+  Cell *cell;
+  u32 sum = 0;
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_ASSERT(id < OS_ARENA_MAX);
+  heapInfo = OSiHeapInfo[id];
+  SDK_ASSERT(heapInfo);
+  SDK_ASSERT(heap < heapInfo->numHeaps);
+
+  if (heap < 0) {
+    heap = heapInfo->currentHeap;
+  }
+
+  if (isHeadInclude) {
+    for (cell = heapInfo->heapArray[heap].allocated; cell; cell = cell->next) {
+      sum += (u32)(cell->size);
+    }
+  } else {
+    for (cell = heapInfo->heapArray[heap].allocated; cell; cell = cell->next) {
+      sum += (u32)(cell->size - HEADERSIZE);
+    }
+  }
+
+  (void)OS_RestoreInterrupts(enabled);
+
+  return sum;
+}
+
+u32 OS_GetTotalFreeSize(OSArenaId id, OSHeapHandle heap) {
+  OSHeapInfo *heapInfo;
+  Cell *cell;
+  u32 sum = 0;
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_ASSERT(id < OS_ARENA_MAX);
+  heapInfo = OSiHeapInfo[id];
+  SDK_ASSERT(heapInfo);
+  SDK_ASSERT(heap < heapInfo->numHeaps);
+
+  if (heap < 0) {
+    heap = heapInfo->currentHeap;
+  }
+
+  for (cell = heapInfo->heapArray[heap].free; cell; cell = cell->next) {
+    sum += (u32)(cell->size - HEADERSIZE);
+  }
+
+  (void)OS_RestoreInterrupts(enabled);
+
+  return sum;
+}
+
+u32 OS_GetMaxFreeSize(OSArenaId id, OSHeapHandle heap) {
+  OSHeapInfo *heapInfo;
+  Cell *cell;
+  u32 candidate = 0;
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_ASSERT(id < OS_ARENA_MAX);
+  heapInfo = OSiHeapInfo[id];
+  SDK_ASSERT(heapInfo);
+  SDK_ASSERT(heap < heapInfo->numHeaps);
+
+  if (heap < 0) {
+    heap = heapInfo->currentHeap;
+  }
+
+  for (cell = heapInfo->heapArray[heap].free; cell; cell = cell->next) {
+    u32 size = (u32)(cell->size - HEADERSIZE);
+    if (size > candidate) {
+      candidate = size;
+    }
+  }
+
+  (void)OS_RestoreInterrupts(enabled);
+
+  return candidate;
+}
+
+void OS_ClearHeap(OSArenaId id, OSHeapHandle heap, void *start, void *end) {
+  OSHeapInfo *heapInfo;
+  HeapDesc *hd;
+  Cell *cell;
+
+  OSIntrMode enabled = OS_DisableInterrupts();
+
+  SDK_TASSERTMSG(id < OS_ARENA_MAX, "invalid id");
+
+  heapInfo = OSiHeapInfo[id];
+
+  SDK_TASSERTMSG(heapInfo && heapInfo->heapArray, "heap not initialized");
+  SDK_TASSERTMSG(start < end, "invalid range");
+  start = (void *)ROUND(start, ALIGNMENT);
+  end = (void *)TRUNC(end, ALIGNMENT);
+  SDK_TASSERTMSG(start < end, "invalid range");
+#ifdef SDK_DEBUG
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+  if (OSi_ExtraHeapArenaId != id || OSi_ExtraHeapHandle != heap) {
+#endif
+    SDK_TASSERTMSG(
+        RangeSubset(start, end, heapInfo->arenaStart, heapInfo->arenaEnd),
+        "invalid range");
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+  }
+#endif
+#endif
+  SDK_TASSERTMSG(MINOBJSIZE <= (char *)end - (char *)start, "too small range");
+
+  if (heap < 0) {
+    heap = heapInfo->currentHeap;
+  }
+
+  hd = &heapInfo->heapArray[heap];
+  hd->size = (char *)end - (char *)start;
+
+  cell = (Cell *)start;
+  cell->prev = NULL;
+  cell->next = NULL;
+  cell->size = hd->size;
+#ifdef SDK_DEBUG
+  cell->hd = NULL;
+#endif // SDK_DEBUG
+
+  hd->free = cell;
+  hd->allocated = 0;
+#ifdef SDK_DEBUG
+  hd->paddingBytes = hd->headerBytes = hd->payloadBytes = 0;
+#endif // SDK_DEBUG
+
+  (void)OS_RestoreInterrupts(enabled);
+}
+
+#if defined(SDK_TWL) && !defined(SDK_TWLLTD)
+void OS_ClearExtraHeap(OSArenaId id, OSHeapHandle heap) {
+  if (!OS_IsRunOnTwl()) {
+    if (OSi_ExtraHeapArenaId == id || OSi_ExtraHeapHandle == heap) {
+      OS_ClearHeap(
+          id, heap, (void *)HW_MAIN_MEM_PARAMETER_BUF,
+          (void *)(HW_MAIN_MEM_PARAMETER_BUF + HW_MAIN_MEM_PARAMETER_BUF_SIZE));
+    }
+  }
+}
+#endif
+
+BOOL OS_IsOnMainMemory(void *ptr) {
+#ifdef SDK_TWL
+  if (OS_IsRunOnTwl()) {
+
+    if ((u32)ptr >= HW_TWL_MAIN_MEM && (u32)ptr < HW_TWL_MAIN_MEM_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  } else
+#endif // SDK_TWL
+  {
+
+    if ((u32)ptr >= HW_MAIN_MEM && (u32)ptr < HW_MAIN_MEM_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+  return FALSE; /* Do Not Return HERE */
+}
+
+BOOL OS_IsOnExtendedMainMemory(void *ptr) {
+#ifdef SDK_TWL
+  if (OS_IsRunOnTwl()) {
+
+    if ((u32)ptr >= HW_TWL_MAIN_MEM_EX && (u32)ptr < HW_TWL_MAIN_MEM_EX_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  } else
+#endif // SDK_TWL
+  {
+
+    if ((u32)ptr >= HW_MAIN_MEM_END && (u32)ptr < HW_MAIN_MEM_EX_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+  return FALSE; /* Do Not Return HERE */
+}
+
+BOOL OS_IsOnWramB(void *ptr) {
+#ifdef SDK_TWL
+  if (OS_IsRunOnTwl()) {
+
+    if ((u32)ptr >= HW_WRAM_B && (u32)ptr < HW_WRAM_B_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+#else
+#pragma unused(ptr)
+#endif // SDK_TWL
+  return FALSE;
+}
+
+BOOL OS_IsOnWramC(void *ptr) {
+#ifdef SDK_TWL
+  if (OS_IsRunOnTwl()) {
+
+    if ((u32)ptr >= HW_WRAM_C && (u32)ptr < HW_WRAM_C_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+#else
+#pragma unused(ptr)
+#endif // SDK_TWL
+  return FALSE;
+}
+
+BOOL OS_IsOnWram0(void *ptr) {
+#ifdef SDK_TWL
+#ifdef SDK_ARM7
+  if (OS_IsRunOnTwl()) {
+#ifdef SDK_TWLLTD
+    if ((u32)ptr >= HW_WRAM_0_LTD && (u32)ptr < HW_WRAM_0_LTD_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+#else
+
+    if ((u32)ptr >= HW_WRAM_0_HYB && (u32)ptr < HW_WRAM_0_HYB_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+#endif // SDK_TWLLTD
+  }
+#else
+
+#pragma unused(ptr)
+#endif // SDK_ARM7
+#else
+
+  {
+    if ((u32)ptr >= HW_WRAM_0 && (u32)ptr < HW_WRAM_0_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+#endif // SDK_ARM7
+
+  return FALSE;
+}
+
+BOOL OS_IsOnWram1(void *ptr) {
+#ifdef SDK_TWL
+#ifdef SDK_ARM7
+  if (OS_IsRunOnTwl()) {
+#ifdef SDK_TWLLTD
+    if ((u32)ptr >= HW_WRAM_1_LTD && (u32)ptr < HW_WRAM_1_LTD_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+#else
+
+    if ((u32)ptr >= HW_WRAM_1_HYB && (u32)ptr < HW_WRAM_1_HYB_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+#endif // SDK_TWLLTD
+  }
+#else
+
+#pragma unused(ptr)
+#endif // SDK_ARM7
+#else
+
+  {
+    if ((u32)ptr >= HW_WRAM_1 && (u32)ptr < HW_WRAM_1_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+#endif // SDK_ARM7
+
+  return FALSE;
+}
+
+BOOL OS_IsOnWram(void *ptr) {
+  return (OS_IsOnWramA(ptr) || OS_IsOnWramB(ptr) || OS_IsOnWramC(ptr) ||
+          OS_IsOnWram0(ptr) || OS_IsOnWram1(ptr));
+}
+
+BOOL OS_IsOnVram(void *ptr) {
+#ifdef SDK_ARM9
+  if ((u32)ptr >= HW_PLTT && (u32)ptr < HW_DB_OAM_END) {
+    return TRUE;
+  }
+#else
+#pragma unused(ptr)
+#endif
+  return FALSE;
+}
+
+BOOL OS_IsOnDtcm(void *ptr) {
+#ifdef SDK_ARM9
+  u32 dtcm;
+  u32 dtcm_end;
+
+  dtcm = OS_GetDTCMAddress();
+  dtcm_end = dtcm + HW_DTCM_SIZE;
+
+  if ((u32)ptr >= dtcm && (u32)ptr < dtcm_end) {
+    return TRUE;
+  }
+#else
+#pragma unused(ptr)
+#endif
+  return FALSE;
+}
+
+BOOL OS_IsOnItcm(void *ptr) {
+#ifdef SDK_ARM9
+  u32 itcm;
+  u32 itcm_end;
+
+  itcm = OS_GetITCMAddress();
+  itcm_end = itcm + HW_ITCM_SIZE;
+
+  if ((u32)ptr >= itcm && (u32)ptr < itcm_end) {
+    return TRUE;
+  }
+#else
+#pragma unused(ptr)
+#endif
+  return FALSE;
+}
+
+BOOL OS_IsOnWramA(void *ptr) {
+#ifdef SDK_TWL
+#ifdef SDK_ARM7
+  if (OS_IsRunOnTwl()) {
+#ifdef SDK_TWLLTD
+
+    if ((u32)ptr >= HW_WRAM_A_LTD && (u32)ptr < HW_WRAM_A_LTD_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+#else
+
+    if ((u32)ptr >= HW_WRAM_A_HYB && (u32)ptr < HW_WRAM_A_HYB_END) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+#endif // SDK_TWLLTD
+  }
+#else
+
+#pragma unused(ptr)
+#endif // SDK_ARM7
+
+#else
+
+#pragma unused(ptr)
+#endif // SDK_TWL
+  return FALSE;
+}
+
+BOOL OS_IsOnArm7PrvWram(void *ptr) {
+#ifdef SDK_ARM7
+  if ((u32)ptr >= HW_PRV_WRAM && (u32)ptr < HW_PRV_WRAM_END) {
+    return TRUE;
+  }
+#else
+#pragma unused(ptr)
+#endif // SDK_ARM7
+  return FALSE;
+}

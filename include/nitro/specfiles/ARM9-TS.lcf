@@ -1,0 +1,105 @@
+MEMORY
+{
+	main       (RWX) : ORIGIN = 0x02000000,  LENGTH = 0x0
+	bss        (RWX) : ORIGIN = AFTER(main), LENGTH = 0x0
+	arena      (RW)  : ORIGIN = AFTER(bss),  LENGTH = 0x0
+}
+
+KEEP_SECTION
+{
+	.ctor
+}
+
+FORCE_ACTIVE
+{
+	SVC_SoftReset
+}
+
+SECTIONS
+{
+	.main: AT 0x02000000
+	{
+	ALIGNALL(4);		. = ALIGN(32);
+	
+	SDK_STATIC_START	=.;
+	SDK_STATIC_TEXT_START	=.;
+				#:::::::::: text
+				libsyscall.a (.text)
+				OBJECT (NitroMain,*)
+				* (.text)
+				* (.itcm)
+				* (.init)
+				* (.exception)
+				. = ALIGN(4);
+	__exception_table_start__ =.;
+				EXCEPTION
+	__exception_table_end__	=.;
+				. = ALIGN(4);
+				* (.rodata)
+	__sinit__		=.;
+				* (.ctor)
+				WRITEW	0;
+				#:::::::::: text
+				. = ALIGN(32);
+	SDK_STATIC_TEXT_END	=.;
+	
+	SDK_STATIC_DATA_START	=.;
+				#:::::::::: data
+				* (.sdata)
+				* (.data)
+				* (.dtcm)
+				#:::::::::: data
+				. = ALIGN(32);
+	SDK_STATIC_DATA_END	=.;
+	SDK_STATIC_END		=.;
+	
+	SDK_STATIC_TEXT_SIZE	= SDK_STATIC_TEXT_END - SDK_STATIC_TEXT_START;
+	SDK_STATIC_DATA_SIZE	= SDK_STATIC_DATA_END - SDK_STATIC_DATA_START;
+	SDK_STATIC_SIZE		= SDK_STATIC_END      - SDK_STATIC_START;
+	
+	} > main
+	
+	
+	.bss: AT 0x02000000 + SIZEOF(main)
+	{
+	ALIGNALL(4);		. = ALIGN(32);
+	
+	SDK_STATIC_BSS_START	=.;
+				#:::::::::: bss
+				* (.sbss)
+				* (.bss)
+				#:::::::::: bss
+	SDK_STATIC_BSS_END	=.;
+	
+	SDK_STATIC_BSS_SIZE	= SDK_STATIC_BSS_END - SDK_STATIC_BSS_START;
+
+	} > bss
+	
+	.area:
+	{
+				. = ALIGN(4);
+	SDK_SECTION_ARENA_START =.;
+	
+	} > arena
+	
+	############################ AUTOLOAD_INFO ##########################
+	SDK_AUTOLOAD_ITCM_START		= 0x01ff8000;
+	SDK_AUTOLOAD_ITCM_END		= SDK_AUTOLOAD_ITCM_START;
+	SDK_AUTOLOAD_ITCM_BSS_END	= SDK_AUTOLOAD_ITCM_START;
+	SDK_AUTOLOAD_DTCM_START		= 0x027e0000;
+	SDK_AUTOLOAD_DTCM_END		= SDK_AUTOLOAD_DTCM_START;
+	SDK_AUTOLOAD_DTCM_BSS_END	= SDK_AUTOLOAD_DTCM_START;
+	SDK_AUTOLOAD_START		= SDK_STATIC_END;
+	SDK_AUTOLOAD_SIZE		= 0;
+	SDK_AUTOLOAD_NUMBER		= 0;
+	SDK_AUTOLOAD_LIST		= SDK_AUTOLOAD_START;
+	SDK_AUTOLOAD_LIST_END		= SDK_AUTOLOAD_START;
+
+	############################ OVERLAYS ###############################
+	SDK_OVERLAY_NUMBER 		= 0;
+	
+	############################ OTHERS #################################
+	SDK_MAIN_ARENA_LO = SDK_SECTION_ARENA_START;
+	SDK_IRQ_STACKSIZE = 0x400;	# allocated in DTCM
+	SDK_SYS_STACKSIZE = 0;		# when 0 means all remains of DTCM
+}

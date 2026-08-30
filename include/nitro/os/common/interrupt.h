@@ -1,0 +1,194 @@
+#ifndef NITRO_OS_INTERRUPT_H_
+#define NITRO_OS_INTERRUPT_H_
+
+#ifdef SDK_TWL
+#include <twl/os/common/interrupt.h>
+#endif
+
+#ifndef SDK_TWL
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <nitro/misc.h>
+#include <nitro/types.h>
+#include <nitro/memorymap.h>
+#include <nitro/ioreg.h>
+#include <nitro/os/common/thread.h>
+
+void OSi_EnterDmaCallback(u32 dmaNo, void (*callback)(void *), void *arg);
+void OSi_EnterTimerCallback(u32 timerNo, void (*callback)(void *), void *arg);
+
+#define OS_IME_DISABLE (0UL << REG_OS_IME_IME_SHIFT)
+#define OS_IME_ENABLE (1UL << REG_OS_IME_IME_SHIFT)
+
+#define OS_IE_V_BLANK (1UL << REG_OS_IE_VB_SHIFT) //  0 VBlank
+#define OS_IE_H_BLANK (1UL << REG_OS_IE_HB_SHIFT) //  1 HBlank
+#define OS_IE_V_COUNT (1UL << REG_OS_IE_VE_SHIFT) //  2 VCounter
+#define OS_IE_TIMER0 (1UL << REG_OS_IE_T0_SHIFT)  //  3 timer0
+#define OS_IE_TIMER1 (1UL << REG_OS_IE_T1_SHIFT)  //  4 timer1
+#define OS_IE_TIMER2 (1UL << REG_OS_IE_T2_SHIFT)  //  5 timer2
+#define OS_IE_TIMER3 (1UL << REG_OS_IE_T3_SHIFT)  //  6 timer3
+#define OS_IE_SIO (1UL << 7) //  7 serial communication (will not occur)
+#define OS_IE_DMA0 (1UL << REG_OS_IE_D0_SHIFT)       //  8 DMA0
+#define OS_IE_DMA1 (1UL << REG_OS_IE_D1_SHIFT)       //  9 DMA1
+#define OS_IE_DMA2 (1UL << REG_OS_IE_D2_SHIFT)       // 10 DMA2
+#define OS_IE_DMA3 (1UL << REG_OS_IE_D3_SHIFT)       // 11 DMA3
+#define OS_IE_KEY (1UL << REG_OS_IE_K_SHIFT)         // 12 key
+#define OS_IE_CARTRIDGE (1UL << REG_OS_IE_I_D_SHIFT) // 13 cartridge
+#define OS_IE_SUBP (1UL << REG_OS_IE_A7_SHIFT)       // 16 sub processor
+#define OS_IE_SPFIFO_SEND                                                      \
+  (1UL << REG_OS_IE_IFE_SHIFT) // 17 sub processor send FIFO empty
+#define OS_IE_SPFIFO_RECV                                                      \
+  (1UL << REG_OS_IE_IFN_SHIFT) // 18 sub processor receive FIFO not empty
+#define OS_IE_CARD_DATA                                                        \
+  (1UL << REG_OS_IE_MC_SHIFT) // 19 card data transfer finish
+#define OS_IE_CARD_IREQ (1UL << REG_OS_IE_MI_SHIFT) // 20 card IREQ
+
+#ifdef SDK_ARM9
+#define OS_IE_GXFIFO (1UL << REG_OS_IE_GF_SHIFT) // 21 geometry command FIFO
+#define OS_IRQ_TABLE_MAX 22
+#define OS_IE_MASK_ALL ((OSIrqMask)((1 << OS_IRQ_TABLE_MAX) - 1))
+
+#else                                              // SDK_ARM7
+#define OS_IE_POWERMAN (1UL << REG_OS_IE_PM_SHIFT) // 22 Power Management IC
+#define OS_IE_SPI (1UL << REG_OS_IE_SPI_SHIFT)     // 23 SPI data transfer
+#define OS_IE_WIRELESS (1UL << REG_OS_IE_WL_SHIFT) // 24 Wireless module
+#define OS_IRQ_TABLE_MAX 25
+#define OS_IE_MASK_ALL ((OSIrqMask)((1 << OS_IRQ_TABLE_MAX) - 1))
+
+#define OS_IE_MAINP OS_IE_SUBP
+#define OS_IE_MPFIFO_SEND OS_IE_SPFIFO_SEND
+#define OS_IE_MPFIFO_RECV OS_IE_SPFIFO_RECV
+#define REG_OS_IE_A9_SHIFT REG_OS_IE_A7_SHIFT
+#endif
+
+#define OS_IE_FIFO_SEND OS_IE_SPFIFO_SEND
+#define OS_IE_FIFO_RECV OS_IE_SPFIFO_RECV
+
+#ifndef SDK_TWL
+
+#endif
+
+#define OSi_IRQCALLBACK_NO_DMA0 0
+#define OSi_IRQCALLBACK_NO_DMA1 1
+#define OSi_IRQCALLBACK_NO_DMA2 2
+#define OSi_IRQCALLBACK_NO_DMA3 3
+#define OSi_IRQCALLBACK_NO_TIMER0 4
+#define OSi_IRQCALLBACK_NO_TIMER1 5
+#define OSi_IRQCALLBACK_NO_TIMER2 6
+#define OSi_IRQCALLBACK_NO_TIMER3 7
+#ifdef SDK_ARM7
+#define OSi_IRQCALLBACK_NO_VBLANK 8
+#endif
+#ifdef SDK_ARM9
+#define OSi_IRQCALLBACK_NUM (7 + 1)
+#else
+#define OSi_IRQCALLBACK_NUM (8 + 1)
+#endif
+
+#define OS_IRQ_MAIN_BUFFER_SIZE (0x200)
+
+typedef void (*OSIrqFunction)(void);
+
+typedef struct {
+  void (*func)(void *);
+  u32 enable;
+  void *arg;
+} OSIrqCallbackInfo;
+
+#ifndef OSi_OSIRQMASK_DEFINED
+typedef u32 OSIrqMask;
+#define OSi_OSIRQMASK_DEFINED
+#endif
+
+extern OSIrqFunction OS_IRQTable[];
+
+extern OSIrqCallbackInfo OSi_IrqCallbackInfo[OSi_IRQCALLBACK_NUM];
+
+void OS_IrqDummy(void);
+void OS_IrqHandler(void);
+void OS_IrqHandler_ThreadSwitch(void);
+
+static inline BOOL OS_EnableIrq(void) {
+  u16 prep = reg_OS_IME;
+  reg_OS_IME = OS_IME_ENABLE;
+  return (BOOL)prep;
+}
+
+static inline BOOL OS_DisableIrq(void) {
+  u16 prep = reg_OS_IME;
+  reg_OS_IME = OS_IME_DISABLE;
+  return (BOOL)prep;
+}
+
+static inline BOOL OS_RestoreIrq(BOOL enable) {
+  u16 prep = reg_OS_IME;
+  reg_OS_IME = (u16)enable;
+  return (BOOL)prep;
+}
+
+static inline BOOL OS_GetIrq(void) { return (BOOL)reg_OS_IME; }
+
+OSIrqMask OS_SetIrqMask(OSIrqMask intr);
+
+static inline OSIrqMask OS_GetIrqMask(void) { return reg_OS_IE; }
+
+OSIrqMask OS_EnableIrqMask(OSIrqMask intr);
+
+OSIrqMask OS_DisableIrqMask(OSIrqMask intr);
+
+OSIrqMask OS_ResetRequestIrqMask(OSIrqMask intr);
+
+static inline OSIrqMask OS_GetRequestIrqMask(void) { return reg_OS_IF; }
+
+void OS_InitIrqTable(void);
+
+void OS_SetIrqFunction(OSIrqMask intrBit, OSIrqFunction function);
+
+OSIrqFunction OS_GetIrqFunction(OSIrqMask intrBit);
+
+static inline void OS_SetIrqCheckFlag(OSIrqMask intr) {
+  *(vu32 *)HW_INTR_CHECK_BUF |= (u32)intr;
+}
+
+static inline void OS_ClearIrqCheckFlag(OSIrqMask intr) {
+  *(vu32 *)HW_INTR_CHECK_BUF &= (u32)~intr;
+}
+
+static inline volatile OSIrqMask OS_GetIrqCheckFlag(void) {
+  return *(volatile OSIrqMask *)HW_INTR_CHECK_BUF;
+}
+
+void OS_WaitIrq(BOOL clear, OSIrqMask irqFlags);
+
+void OS_WaitAnyIrq(void);
+
+static inline vu32 OS_GetVBlankCount(void) {
+  return *(vu32 *)HW_VBLANK_COUNT_BUF;
+}
+
+static inline void OSi_SetVBlankCount(u32 count) {
+  *(u32 *)HW_VBLANK_COUNT_BUF = count;
+}
+
+extern void OS_SetIrqStackWarningOffset(u32 offset);
+
+extern OSStackStatus OS_GetIrqStackStatus(void);
+
+extern void OS_SetIrqStackChecker(void);
+
+void OSi_CheckIrqStack(char *file, int line);
+#if !defined(SDK_FINALROM) && !defined(SDK_NO_MESSAGE)
+#define OS_CheckIrqStack() OSi_CheckIrqStack(__FILE__, __LINE__);
+#else
+#define OS_CheckIrqStack() ((void)0)
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+#endif
+
+#endif

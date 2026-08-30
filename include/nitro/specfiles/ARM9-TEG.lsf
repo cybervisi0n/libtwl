@@ -1,0 +1,25 @@
+#
+#  Nitro LCF SPEC FILE
+#
+
+Static $(TARGET_NAME)
+{
+	Address		0x02004000
+	Object		$(OBJS_STATIC)
+	Library		$(LLIBS) $(GLIBS) $(CW_LIBS)
+}
+
+Autoload ITCM
+{
+	Address		0x01ff8000
+	Object		*     		 (.itcm)
+	Object		$(OBJS_AUTOLOAD) (.text)
+}
+
+Autoload DTCM
+{
+	Address		0x02380000
+	Object		*     		 (.dtcm)
+	Object		$(OBJS_AUTOLOAD) (.data)
+	Object		$(OBJS_AUTOLOAD) (.bss)
+}
