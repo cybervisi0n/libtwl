@@ -1,9 +1,9 @@
-libntr_link_args = []
+libtwl_link_args = []
 
-libntr_exe = executable(
-    'libntr',
+libtwl_exe = executable(
+    'libtwl',
     sources: files('main.cpp'),
-    dependencies: [ nitrosdk_dep ],
-    link_args: [ libntr_link_args ],
+    dependencies: [ libtwl_dep ],
+    link_args: [ libtwl_link_args ],
     native: build_target != 'arm',
 )
