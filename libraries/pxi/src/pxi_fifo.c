@@ -116,7 +116,12 @@ void PXI_SetFifoSendCallback(PXIFifoEmtpyCallback callback) {
   (void)OS_RestoreInterrupts(enabled);
 }
 
-int PXI_SendWordByFifo(int fifotag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+int PXI_SendWordByFifo (int fifotag, u64 data, BOOL err)
+#else
+int PXI_SendWordByFifo(int fifotag, u32 data, BOOL err)
+#endif
+{
   PXIFifoMessage fifomsg;
 
   SDK_TASSERTMSG(0 <= fifotag && fifotag < PXI_MAX_FIFO_TAG,

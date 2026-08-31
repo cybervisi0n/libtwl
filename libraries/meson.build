@@ -30,3 +30,8 @@ subdir('wfs')
 subdir('wm')
 subdir('wvr')
 subdir('wxc')
+
+if (build_target != 'arm')
+    subdir('sim')
+    subdir('sim7')
+endif

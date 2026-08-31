@@ -306,11 +306,21 @@ void GXx_SetMasterBrightness_(vu16 *reg, int brightness);
 int GXx_GetMasterBrightness_(vu16 *reg);
 
 static inline GXDispCnt GX_GetDispCnt(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXDispCnt a;
+  return a;
+  #else
   return *(volatile GXDispCnt *)REG_DISPCNT_ADDR;
+  #endif
 }
 
 static inline GXSDispCnt GXS_GetDispCnt(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXSDispCnt a;
+  return a;
+  #else
   return *(volatile GXSDispCnt *)REG_DB_DISPCNT_ADDR;
+  #endif
 }
 
 static inline GXBGScrOffset GX_GetBGScrOffset() {

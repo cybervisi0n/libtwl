@@ -3,15 +3,29 @@
 
 #include <nitro/gx/gxcommon.h>
 #ifndef SDK_TWL
+#ifdef SDK_BUILD_ARM
 #include <nitro/hw/ARM9/ioreg_G2.h>
 #include <nitro/hw/ARM9/ioreg_G2S.h>
 #include <nitro/hw/ARM9/ioreg_GX.h>
 #include <nitro/hw/ARM9/ioreg_GXS.h>
 #else
+#include <nitro/hw/X86/ioreg_G2.h>
+#include <nitro/hw/X86/ioreg_G2S.h>
+#include <nitro/hw/X86/ioreg_GX.h>
+#include <nitro/hw/X86/ioreg_GXS.h>
+#endif
+#else
+#ifdef SDK_BUILD_ARM
 #include <twl/hw/ARM9/ioreg_G2.h>
 #include <twl/hw/ARM9/ioreg_G2S.h>
 #include <twl/hw/ARM9/ioreg_GX.h>
 #include <twl/hw/ARM9/ioreg_GXS.h>
+#else
+#include <twl/hw/X86/ioreg_G2.h>
+#include <twl/hw/X86/ioreg_G2S.h>
+#include <twl/hw/X86/ioreg_GX.h>
+#include <twl/hw/X86/ioreg_GXS.h>
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -195,7 +209,12 @@ static inline void G2_SetWnd0InsidePlane(int wnd, BOOL effect) {
 }
 
 static inline GXWndPlane G2_GetWnd0InsidePlane(void) {
+	#if(defined(SDK_PORT) && defined(__cplusplus))
+	GXWndPlane a;
+	return a;
+	#else
   return *(volatile GXWndPlane *)(REG_WININ_ADDR);
+  #endif
 }
 
 static inline void G2_SetWnd1InsidePlane(int wnd, BOOL effect) {
@@ -213,7 +232,12 @@ static inline void G2_SetWnd1InsidePlane(int wnd, BOOL effect) {
 }
 
 static inline GXWndPlane G2_GetWnd1InsidePlane(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXWndPlane a;
+  return a;
+  #else
   return *(volatile GXWndPlane *)(REG_WININ_ADDR + 1);
+  #endif
 }
 
 static inline void G2_SetWndOutsidePlane(int wnd, BOOL effect) {
@@ -231,7 +255,12 @@ static inline void G2_SetWndOutsidePlane(int wnd, BOOL effect) {
 }
 
 static inline GXWndPlane G2_GetWndOutsidePlane(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXWndPlane a;
+  return a;
+  #else
   return *(volatile GXWndPlane *)(REG_WINOUT_ADDR);
+  #endif
 }
 
 static inline void G2_SetWndOBJInsidePlane(int wnd, BOOL effect) {
@@ -249,7 +278,12 @@ static inline void G2_SetWndOBJInsidePlane(int wnd, BOOL effect) {
 }
 
 static inline GXWndPlane G2_GetWndOBJInsidePlane(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXWndPlane a;
+  return a;
+  #else
   return *(volatile GXWndPlane *)(REG_WINOUT_ADDR + 1);
+  #endif
 }
 
 static inline void G2_SetWnd0Position(int x1, int y1, int x2, int y2) {
@@ -395,7 +429,12 @@ static inline void G2S_SetWnd0InsidePlane(int wnd, BOOL effect) {
 }
 
 static inline GXWndPlane G2S_GetWnd0InsidePlane(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXWndPlane a;
+  return a;
+  #else
   return *(volatile GXWndPlane *)(REG_DB_WININ_ADDR);
+  #endif
 }
 
 static inline void G2S_SetWnd1InsidePlane(int wnd, BOOL effect) {
@@ -413,7 +452,12 @@ static inline void G2S_SetWnd1InsidePlane(int wnd, BOOL effect) {
 }
 
 static inline GXWndPlane G2S_GetWnd1InsidePlane(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXWndPlane a;
+  return a;
+  #else
   return *(volatile GXWndPlane *)(REG_DB_WININ_ADDR + 1);
+  #endif
 }
 
 static inline void G2S_SetWndOutsidePlane(int wnd, BOOL effect) {
@@ -431,7 +475,12 @@ static inline void G2S_SetWndOutsidePlane(int wnd, BOOL effect) {
 }
 
 static inline GXWndPlane G2S_GetWndOutsidePlane(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXWndPlane a;
+  return a;
+  #else
   return *(volatile GXWndPlane *)(REG_DB_WINOUT_ADDR);
+  #endif
 }
 
 static inline void G2S_SetWndOBJInsidePlane(int wnd, BOOL effect) {
@@ -449,7 +498,12 @@ static inline void G2S_SetWndOBJInsidePlane(int wnd, BOOL effect) {
 }
 
 static inline GXWndPlane G2S_GetWndOBJInsidePlane(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXWndPlane a;
+  return a;
+  #else
   return *(volatile GXWndPlane *)(REG_DB_WINOUT_ADDR + 1);
+  #endif
 }
 
 static inline void G2S_SetWnd0Position(int x1, int y1, int x2, int y2) {

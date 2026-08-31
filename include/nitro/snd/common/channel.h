@@ -172,6 +172,10 @@ void SND_StartChannel(int chNo);
 
 #endif /* SDK_ARM7 */
 
+#ifdef SDK_PORT
+    void SND_StartChannel7(int chNo);
+#endif
+
 #ifdef SDK_ARM7
 
 void SND_SetupChannelPcm(int chNo, const void *dataaddr, SNDWaveFormat format,
@@ -196,6 +200,26 @@ void SND_SetMasterPan(int pan);
 u32 SND_GetChannelControl(int chNo);
 
 #endif /* SDK_ARM7 */
+
+#ifdef SDK_PORT
+void SND_SetupChannelPcm7(int chNo,
+                         const void *dataaddr,
+                         SNDWaveFormat format,
+                         SNDChannelLoop loop,
+                         int loopStart,
+                         int loopLen, int volume, SNDChannelDataShift shift, int timer, int pan);
+void SND_SetupChannelPsg7(int chNo,
+                         SNDDuty duty,
+                         int volume, SNDChannelDataShift shift, int timer, int pan);
+void SND_SetupChannelNoise7(int chNo, int volume, SNDChannelDataShift shift, int timer, int pan);
+void SND_StopChannel7(int chNo, s32 flags);
+void SND_SetChannelVolume7(int chNo, int volume, SNDChannelDataShift shift);
+void SND_SetChannelTimer7(int chNo, int timer);
+void SND_SetChannelPan7(int chNo, int pan);
+BOOL SND_IsChannelActive7(int chNo);
+void SND_SetMasterPan7(int pan);
+u32 SND_GetChannelControl7(int chNo);
+#endif
 
 #ifdef SDK_ARM7
 

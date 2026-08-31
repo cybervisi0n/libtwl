@@ -86,7 +86,7 @@ typedef struct SNDTrackInfo {
 
 extern SNDSharedWork *SNDi_SharedWork;
 
-#ifdef SDK_ARM7
+#if defined(SDK_ARM7) || defined(SDK_PORT)
 
 extern SNDWork SNDi_Work;
 

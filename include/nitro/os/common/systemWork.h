@@ -83,6 +83,15 @@ typedef struct {
                            // ARM9)
   u32 lockIDFlag_subp[2];  // 3b8-3bf:   8 bytes lockID management flag (for
                            // ARM7)
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  OSLockWord lock_VRAM_C;
+  OSLockWord lock_VRAM_D;
+  OSLockWord lock_WRAM_BLOCK0;
+  OSLockWord lock_WRAM_BLOCK1;
+  OSLockWord lock_CARD;
+  OSLockWord lock_CARTRIDGE;
+  OSLockWord lock_INIT;
+  #else
   struct OSLockWord
       lock_VRAM_C; // 3c0-3c7:   8 bytes           VRAM-C - lock buffer
   struct OSLockWord lock_VRAM_D; // 3c8-3cf:   8 bytes VRAM-D - lock buffer
@@ -93,6 +102,7 @@ typedef struct {
   struct OSLockWord lock_CARD; // 3e0-3e7:   8 bytes Game Card - lock buffer
   struct OSLockWord lock_CARTRIDGE; // 3e8-3ef:   8 bytes Game Pak - lock buffer
   struct OSLockWord lock_INIT; // 3f0-3f7:   8 bytes Initialization lock buffer
+  #endif
   u16 mmem_checker_mainp; // 3f8-3f9:   2 bytes MainMemory Size Checker for Main
                           // processor
   u16 mmem_checker_subp;  // 3fa-3fb:   2 bytes MainMemory Size Checker for Sub
@@ -105,7 +115,10 @@ typedef struct {
 
 #ifdef SDK_TWL
 typedef struct {
-  struct OSLockWord
+  #ifdef SDK_BUILD_ARM
+  struct 
+  #endif
+  OSLockWord
       lock_WRAM_ex;  // 000-003:   4 bytes: Lock buffer for WRAM-A, B, and C
   u32 reset_flag;    // 004-007:   4 bytes: Reset flags (hardware reset)
   u8 padding[0x178]; // 008-17f:  (376 bytes)

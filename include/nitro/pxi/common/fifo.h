@@ -71,6 +71,16 @@ typedef union {
 
 } PXIFifoMessage;
 
+#ifdef SDK_PORT
+typedef struct {
+    struct {
+        u32     tag;
+        u32     err;
+        u64     data;
+    } e;
+} WIN_PXIFifoMessage;
+#endif
+
 typedef void (*PXIFifoCallback)(PXIFifoTag tag, u32 data, BOOL err);
 typedef void (*PXIFifoEmtpyCallback)(void);
 
@@ -81,6 +91,9 @@ static inline BOOL PXI_IsFifoError(PXIFifoStatus status) {
 void PXI_InitFifo(void);
 
 void PXI_SetFifoRecvCallback(int fifotag, PXIFifoCallback callback);
+#ifndef SDK_BUILD_ARM
+void PXI_SetFifoRecvCallback7(int fifotag, PXIFifoCallback callback);
+#endif
 
 BOOL PXI_IsCallbackReady(int fifotag, PXIProc proc);
 
@@ -94,7 +107,13 @@ static inline BOOL PXI_IsArm9CallbackReady(int fifotag) {
 
 void PXI_SetFifoSendCallback(PXIFifoEmtpyCallback callback);
 
+#ifdef SDK_PORT
+int PXI_SendWordByFifo(int fifotag, u64 data, BOOL err);
+int PXI_SendWordByFifo7(int fifotag, u64 data, BOOL err);
+PXIFifoCallback PXI_WIN_GetCallback(u32 tag);
+#else
 int PXI_SendWordByFifo(int fifotag, u32 data, BOOL err);
+#endif
 
 void PXIi_HandlerRecvFifoNotEmpty(void);
 

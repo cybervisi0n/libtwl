@@ -137,7 +137,7 @@ void SND_SetWaveDataAddress(struct SNDWaveArc *waveArc, int index,
 const SNDWaveData *SND_GetWaveDataAddress(const struct SNDWaveArc *waveArc,
                                           int index);
 
-#ifdef SDK_ARM7
+#if defined(SDK_ARM7) || defined(SDK_PORT)
 
 BOOL SND_NoteOn(struct SNDExChannel *ch_p, int key, int velocity, s32 length,
                 const struct SNDBankData *bank, const struct SNDInstData *inst);

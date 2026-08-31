@@ -3,15 +3,29 @@
 
 #include <nitro/gx/gxcommon.h>
 #ifndef SDK_TWL
+#ifdef SDK_BUILD_ARM
 #include <nitro/hw/ARM9/ioreg_GX.h>
 #include <nitro/hw/ARM9/ioreg_G2.h>
 #include <nitro/hw/ARM9/ioreg_GXS.h>
 #include <nitro/hw/ARM9/ioreg_G2S.h>
 #else
+#include <nitro/hw/X86/ioreg_GX.h>
+#include <nitro/hw/X86/ioreg_G2.h>
+#include <nitro/hw/X86/ioreg_GXS.h>
+#include <nitro/hw/X86/ioreg_G2S.h>
+#endif
+#else
+#ifdef SDK_BUILD_ARM
 #include <twl/hw/ARM9/ioreg_GX.h>
 #include <twl/hw/ARM9/ioreg_G2.h>
 #include <twl/hw/ARM9/ioreg_GXS.h>
 #include <twl/hw/ARM9/ioreg_G2S.h>
+#else
+#include <twl/hw/X86/ioreg_GX.h>
+#include <twl/hw/X86/ioreg_G2.h>
+#include <twl/hw/X86/ioreg_GXS.h>
+#include <twl/hw/X86/ioreg_G2S.h>
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -540,9 +554,14 @@ static inline void G2_SetBG0Control(GXBGScrSizeText screenSize,
 }
 
 static inline GXBg01Control G2_GetBG0Control(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg01Control a;
+  return a;
+  #else
   GX_BG0_2D_CHECK_WARNING;
 
   return *(volatile GXBg01Control *)REG_BG0CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG0Control(GXBGScrSizeText screenSize,
@@ -567,7 +586,12 @@ static inline void G2S_SetBG0Control(GXBGScrSizeText screenSize,
 }
 
 static inline GXBg01Control G2S_GetBG0Control(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg01Control a;
+  return a;
+  #else
   return *(volatile GXBg01Control *)REG_DB_BG0CNT_ADDR;
+  #endif
 }
 
 static inline void G2_SetBG1Control(GXBGScrSizeText screenSize,
@@ -591,7 +615,11 @@ static inline void G2_SetBG1Control(GXBGScrSizeText screenSize,
 }
 
 static inline GXBg01Control G2_GetBG1Control(void) {
+  #ifdef __cplusplus
+  return *(GXBg01Control *)REG_BG1CNT_ADDR;
+  #else
   return *(volatile GXBg01Control *)REG_BG1CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG1Control(GXBGScrSizeText screenSize,
@@ -616,7 +644,12 @@ static inline void G2S_SetBG1Control(GXBGScrSizeText screenSize,
 }
 
 static inline GXBg01Control G2S_GetBG1Control(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg01Control a;
+  return a;
+  #else
   return *(volatile GXBg01Control *)REG_DB_BG1CNT_ADDR;
+  #endif
 }
 
 static inline GXBGExtMode G2_GetBG2ExtMode(void) {
@@ -657,8 +690,13 @@ static inline void G2_SetBG2ControlText(GXBGScrSizeText screenSize,
 
 static inline GXBg23ControlText G2_GetBG2ControlText(void) {
   GX_BGMODE_WARNING3(G2_GetBG2ControlText, 0, 1, 3);
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlText a;
+  return a;
+  #else
 
   return *(volatile GXBg23ControlText *)REG_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG2ControlText(GXBGScrSizeText screenSize,
@@ -682,8 +720,12 @@ static inline void G2S_SetBG2ControlText(GXBGScrSizeText screenSize,
 
 static inline GXBg23ControlText G2S_GetBG2ControlText(void) {
   GXS_BGMODE_WARNING3(G2S_GetBG2ControlText, 0, 1, 3);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlText a;
+  return a;
+  #else
   return *(volatile GXBg23ControlText *)REG_DB_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void G2_SetBG2ControlAffine(GXBGScrSizeAffine screenSize,
@@ -706,8 +748,12 @@ static inline void G2_SetBG2ControlAffine(GXBGScrSizeAffine screenSize,
 
 static inline GXBg23ControlAffine G2_GetBG2ControlAffine(void) {
   GX_BGMODE_WARNING2(G2_GetBG2ControlAffine, 2, 4);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlAffine a;
+  return a;
+  #else
   return *(volatile GXBg23ControlAffine *)REG_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG2ControlAffine(GXBGScrSizeAffine screenSize,
@@ -731,8 +777,12 @@ static inline void G2S_SetBG2ControlAffine(GXBGScrSizeAffine screenSize,
 
 static inline GXBg23ControlAffine G2S_GetBG2ControlAffine(void) {
   GXS_BGMODE_WARNING2(G2S_GetBG2ControlAffine, 2, 4);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlAffine a;
+  return a;
+  #else
   return *(volatile GXBg23ControlAffine *)REG_DB_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void
@@ -756,14 +806,22 @@ G2_SetBG2Control256x16Affine(GXBGScrSize256x16Pltt screenSize,
 
 static inline GXBg23Control256x16Pltt G2_GetBG2Control256x16Pltt(void) {
   GX_BGMODE_WARNING1(G2_GetBG2Control256x16Pltt, 5);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256x16Pltt a;
+  return a;
+  #else
   return *(volatile GXBg23Control256x16Pltt *)REG_BG2CNT_ADDR;
+  #endif
 }
 
 static inline GXBg23Control256x16Affine G2_GetBG2Control256x16Affine(void) {
   GX_BGMODE_WARNING1(G2_GetBG2Control256x16Affine, 5);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256x16Affine a;
+  return a;
+  #else
   return *(volatile GXBg23Control256x16Affine *)REG_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void
@@ -788,14 +846,22 @@ G2S_SetBG2Control256x16Affine(GXBGScrSize256x16Pltt screenSize,
 
 static inline GXBg23Control256x16Pltt G2S_GetBG2Control256x16Pltt(void) {
   GXS_BGMODE_WARNING1(G2S_GetBG2Control256x16Pltt, 5);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256x16Pltt a;
+  return a;
+  #else
   return *(volatile GXBg23Control256x16Pltt *)REG_DB_BG2CNT_ADDR;
+  #endif
 }
 
 static inline GXBg23Control256x16Affine G2S_GetBG2Control256x16Affine(void) {
   GXS_BGMODE_WARNING1(G2S_GetBG2Control256x16Affine, 5);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256x16Affine a;
+  return a;
+  #else
   return *(volatile GXBg23Control256x16Affine *)REG_DB_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void G2_SetBG2Control256Bmp(GXBGScrSize256Bmp screenSize,
@@ -816,8 +882,12 @@ static inline void G2_SetBG2Control256Bmp(GXBGScrSize256Bmp screenSize,
 
 static inline GXBg23Control256Bmp G2_GetBG2Control256Bmp(void) {
   GX_BGMODE_WARNING1(G2_GetBG2Control256Bmp, 5);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256Bmp a;
+  return a;
+  #else
   return *(volatile GXBg23Control256Bmp *)REG_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG2Control256Bmp(GXBGScrSize256Bmp screenSize,
@@ -841,8 +911,12 @@ static inline void G2S_SetBG2Control256Bmp(GXBGScrSize256Bmp screenSize,
 
 static inline GXBg23Control256Bmp G2S_GetBG2Control256Bmp(void) {
   GXS_BGMODE_WARNING1(G2S_GetBG2Control256Bmp, 5);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256Bmp a;
+  return a;
+  #else
   return *(volatile GXBg23Control256Bmp *)REG_DB_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void G2_SetBG2ControlDCBmp(GXBGScrSizeDcBmp screenSize,
@@ -863,8 +937,12 @@ static inline void G2_SetBG2ControlDCBmp(GXBGScrSizeDcBmp screenSize,
 
 static inline GXBg23ControlDCBmp G2_GetBG2ControlDCBmp(void) {
   GX_BGMODE_WARNING1(G2_SetBG2ControlDCBmp, 5);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlDCBmp a;
+  return a;
+  #else
   return *(volatile GXBg23ControlDCBmp *)REG_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG2ControlDCBmp(GXBGScrSizeDcBmp screenSize,
@@ -890,8 +968,12 @@ static inline void G2S_SetBG2ControlDCBmp(GXBGScrSizeDcBmp screenSize,
 
 static inline GXBg23ControlDCBmp G2S_GetBG2ControlDCBmp(void) {
   GXS_BGMODE_WARNING1(G2S_GetBG2ControlDCBmp, 5);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlDCBmp a;
+  return a;
+  #else
   return *(volatile GXBg23ControlDCBmp *)REG_DB_BG2CNT_ADDR;
+  #endif
 }
 
 static inline void G2_SetBG2ControlLargeBmp(GXBGScrSizeLargeBmp screenSize,
@@ -908,8 +990,12 @@ static inline void G2_SetBG2ControlLargeBmp(GXBGScrSizeLargeBmp screenSize,
 
 static inline GXBg2ControlLargeBmp G2_GetBG2ControlLargeBmp(void) {
   GX_BGMODE_WARNING1(G2_GetBG2ControlLargeBmp, 6);
-
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg2ControlLargeBmp a;
+  return a;
+  #else
   return *(volatile GXBg2ControlLargeBmp *)REG_BG2CNT_ADDR;
+  #endif
 }
 
 static inline GXBGExtMode G2_GetBG3ExtMode(void) {
@@ -949,7 +1035,12 @@ static inline void G2_SetBG3ControlText(GXBGScrSizeText screenSize,
 }
 
 static inline GXBg23ControlText G2_GetBG3ControlText(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlText a;
+  return a;
+  #else
   return *(volatile GXBg23ControlText *)REG_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG3ControlText(GXBGScrSizeText screenSize,
@@ -972,7 +1063,12 @@ static inline void G2S_SetBG3ControlText(GXBGScrSizeText screenSize,
 }
 
 static inline GXBg23ControlText G2S_GetBG3ControlText(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlText a;
+  return a;
+  #else
   return *(volatile GXBg23ControlText *)REG_DB_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void G2_SetBG3ControlAffine(GXBGScrSizeAffine screenSize,
@@ -994,7 +1090,12 @@ static inline void G2_SetBG3ControlAffine(GXBGScrSizeAffine screenSize,
 }
 
 static inline GXBg23ControlAffine G2_GetBG3ControlAffine(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlAffine a;
+  return a;
+  #else
   return *(volatile GXBg23ControlAffine *)REG_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG3ControlAffine(GXBGScrSizeAffine screenSize,
@@ -1017,7 +1118,12 @@ static inline void G2S_SetBG3ControlAffine(GXBGScrSizeAffine screenSize,
 }
 
 static inline GXBg23ControlAffine G2S_GetBG3ControlAffine(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlAffine a;
+  return a;
+  #else
   return *(volatile GXBg23ControlAffine *)REG_DB_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void
@@ -1040,11 +1146,21 @@ G2_SetBG3Control256x16Affine(GXBGScrSize256x16Pltt screenSize,
 }
 
 static inline GXBg23Control256x16Pltt G2_GetBG3Control256x16Pltt(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256x16Pltt a;
+  return a;
+  #else
   return *(volatile GXBg23Control256x16Pltt *)REG_BG3CNT_ADDR;
+  #endif
 }
 
 static inline GXBg23Control256x16Affine G2_GetBG3Control256x16Affine(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256x16Affine a;
+  return a;
+  #else
   return *(volatile GXBg23Control256x16Affine *)REG_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void
@@ -1068,11 +1184,21 @@ G2S_SetBG3Control256x16Affine(GXBGScrSize256x16Pltt screenSize,
 }
 
 static inline GXBg23Control256x16Pltt G2S_GetBG3Control256x16Pltt(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256x16Pltt a;
+  return a;
+  #else
   return *(volatile GXBg23Control256x16Pltt *)REG_DB_BG3CNT_ADDR;
+  #endif
 }
 
 static inline GXBg23Control256x16Affine G2S_GetBG3Control256x16Affine(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256x16Affine a;
+  return a;
+  #else
   return *(volatile GXBg23Control256x16Affine *)REG_DB_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void G2_SetBG3Control256Bmp(GXBGScrSize256Bmp screenSize,
@@ -1092,7 +1218,12 @@ static inline void G2_SetBG3Control256Bmp(GXBGScrSize256Bmp screenSize,
 }
 
 static inline GXBg23Control256Bmp G2_GetBG3Control256Bmp(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256Bmp a;
+  return a;
+  #else
   return *(volatile GXBg23Control256Bmp *)REG_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG3Control256Bmp(GXBGScrSize256Bmp screenSize,
@@ -1115,7 +1246,12 @@ static inline void G2S_SetBG3Control256Bmp(GXBGScrSize256Bmp screenSize,
 }
 
 static inline GXBg23Control256Bmp G2S_GetBG3Control256Bmp(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23Control256Bmp a;
+  return a;
+  #else
   return *(volatile GXBg23Control256Bmp *)REG_DB_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void G2_SetBG3ControlDCBmp(GXBGScrSizeDcBmp screenSize,
@@ -1135,7 +1271,12 @@ static inline void G2_SetBG3ControlDCBmp(GXBGScrSizeDcBmp screenSize,
 }
 
 static inline GXBg23ControlDCBmp G2_GetBG3ControlDCBmp(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlDCBmp a;
+  return a;
+  #else
   return *(volatile GXBg23ControlDCBmp *)REG_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void G2S_SetBG3ControlDCBmp(GXBGScrSizeDcBmp screenSize,
@@ -1156,7 +1297,12 @@ static inline void G2S_SetBG3ControlDCBmp(GXBGScrSizeDcBmp screenSize,
 }
 
 static inline GXBg23ControlDCBmp G2S_GetBG3ControlDCBmp(void) {
+  #if(defined(SDK_PORT) && defined(__cplusplus))
+  GXBg23ControlDCBmp a;
+  return a;
+  #else
   return *(volatile GXBg23ControlDCBmp *)REG_DB_BG3CNT_ADDR;
+  #endif
 }
 
 static inline void G2_BG0Mosaic(BOOL enable) {

@@ -149,7 +149,7 @@ typedef struct SNDExChannel {
   struct SNDExChannel *nextLink;
 } SNDExChannel;
 
-#ifdef SDK_ARM7
+#if defined(SDK_ARM7) || defined(SDK_PORT)
 
 void SND_ExChannelInit(void);
 void SND_ExChannelMain(BOOL doPeriodicProc);
