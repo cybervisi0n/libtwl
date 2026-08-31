@@ -15,6 +15,14 @@
 #include "../include/command.h"
 #include "../include/rom.h"
 
+#ifdef SDK_PORT
+BOOL FATFSi_IsInitialized(void) {
+  return TRUE;
+}
+
+int FATFS_SeekFile(FATFSFileHandle file, int offset, FATFSSeekMode origin) {return 0;}
+#endif
+
 #if defined(FS_IMPLEMENT)
 
 #include <twl/ltdmain_begin.h>

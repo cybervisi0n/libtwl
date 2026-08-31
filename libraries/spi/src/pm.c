@@ -30,11 +30,17 @@ typedef struct {
 #define PMi_COMPARE_GT 0 // Compare by '>'
 #define PMi_COMPARE_GE 1 // Compare by '>='
 
+#ifdef SDK_PORT
+static
+#endif
 inline u32 PMi_MakeData1(u32 bit, u32 seq, u32 command, u32 data) {
   return (bit) | ((seq) << SPI_PXI_INDEX_SHIFT) | ((command) << 8) |
          ((data) & 0xff);
 }
 
+#ifdef SDK_PORT
+static
+#endif
 inline u32 PMi_MakeData2(u32 bit, u32 seq, u32 data) {
   return (bit) | ((seq) << SPI_PXI_INDEX_SHIFT) | ((data) & 0xffff);
 }

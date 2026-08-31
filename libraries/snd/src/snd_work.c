@@ -50,6 +50,11 @@ SNDWork SNDi_Work;
 
 #endif /* SDK_ARM7 */
 
+#ifdef SDK_PORT
+SNDWork SNDi_Work;
+#endif
+
+
 static const void *ConvAddr(const void *p, const void *baseFrom,
                             const void *baseTo);
 

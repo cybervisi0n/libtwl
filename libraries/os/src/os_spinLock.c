@@ -51,6 +51,13 @@ static void OSi_WaitByLoop(void);
 #define OSi_ANYP_LOCK_ID_START OS_SUBP_LOCK_ID_START
 #endif
 
+#ifdef SDK_PORT
+
+void SVC_WaitByLoop(s32 count){
+    return;
+}
+#endif
+
 #ifdef SDK_TWL
 
 void OSi_SyncWithOtherProc(int type, void *syncBuf) {

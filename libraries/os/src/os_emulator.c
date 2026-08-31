@@ -183,7 +183,7 @@ BOOL OS_IsRunOnDebugger(void) {
              : FALSE;
 }
 
-#ifdef SDK_TWLHYB
+#if defined(SDK_TWLHYB) || defined(SDK_PORT)
 BOOL OS_IsRunOnTwl(void) {
   static BOOL OSi_IsDetectedTWL = FALSE;
   static BOOL OSi_IsRunOnTWL = FALSE;

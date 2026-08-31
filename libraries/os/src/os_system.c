@@ -24,6 +24,50 @@ u32 OS_GetDTCMParam(void) { return 0; }
 void OS_SetDTCMAddress(register u32 address) {}
 
 u32 OS_GetDTCMAddress(void) { return 0; }
+
+OSIntrMode OS_EnableInterrupts( void )
+{
+    return 0;
+}
+
+OSIntrMode OS_DisableInterrupts( void )
+{
+    return 0;
+}
+
+OSProcMode OS_GetProcMode( void )
+{
+    return 0;
+}
+
+OSIntrMode OS_DisableInterrupts_IrqAndFiq( void )
+{
+    return 0;
+}
+
+OSIntrMode OS_RestoreInterrupts( OSIntrMode state )
+{
+    return 0;
+}
+
+OSIntrMode OS_EnableInterrupts_IrqAndFiq( void )
+{
+    return 0;
+}
+
+OSIntrMode OS_RestoreInterrupts_IrqAndFiq( OSIntrMode state )
+{
+    return 0;
+}
+
+OSIntrMode_Irq OS_GetCpsrIrq( void )
+{
+    return 0;
+}
+
+void SVC_Halt() {
+  
+}
 #else
 
 #if defined(SDK_TCM_APPLY) && defined(SDK_ARM9)

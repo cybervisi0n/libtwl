@@ -6,6 +6,14 @@
 
 static u16 FifoCtrlInit = 0;
 static PXIFifoCallback FifoRecvCallbackTable[PXI_MAX_FIFO_TAG];
+#ifdef SDK_PORT
+PXIFifoCallback FifoRecvCallbackTable7[PXI_MAX_FIFO_TAG];
+
+PXIFifoCallback PXI_WIN_GetCallback(u32 tag)
+{
+    return FifoRecvCallbackTable[tag];
+}
+#endif
 
 static inline PXIFifoStatus PXIi_GetFromFifo(u32 *data_buf);
 static inline PXIFifoStatus PXIi_SetToFifo(u32 data);

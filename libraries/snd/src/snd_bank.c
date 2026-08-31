@@ -444,7 +444,7 @@ const SNDWaveData *SND_GetWaveDataAddress(const SNDWaveArc *waveArc,
   return wave;
 }
 
-#ifdef SDK_ARM7
+#if defined( SDK_PORT ) || defined(SDK_ARM7)
 
 BOOL SND_NoteOn(SNDExChannel *ch_p, int key, int velocity, s32 length,
                 const SNDBankData *bank, const SNDInstData *inst) {

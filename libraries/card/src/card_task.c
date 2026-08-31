@@ -95,7 +95,7 @@ void CARDi_TaskWorkerProcedure(void *arg) {
   }
 }
 
-#if defined(SDK_ARM9)
+#if defined(SDK_ARM9) || defined(SDK_PORT)
 
 #include "../include/card_common.h"
 

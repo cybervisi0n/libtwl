@@ -7,8 +7,16 @@
 #include <nitro/os.h>
 #include <nitro/mi.h>
 
+
+#ifdef SDK_PORT
+void SDK_SYS_STACKSIZE(void)
+{
+}
+void SDK_IRQ_STACKSIZE(void)
+{
+}
+#else
 extern unsigned long SDK_SYS_STACKSIZE[];
-#ifdef SDK_BUILD_ARM
 extern unsigned long SDK_IRQ_STACKSIZE[];
 #endif
 #define OSi_SYS_STACKSIZE ((s32)SDK_SYS_STACKSIZE)

@@ -15,7 +15,7 @@
 
 u32 GXi_DmaId = GX_DEFAULT_DMAID;
 
-#ifdef SDK_ARM9
+#if (defined(SDK_ARM9)) || defined(SDK_PORT)
 vu16 GXi_VRamLockId = 0;
 #endif
 

@@ -22,6 +22,11 @@ static SVCSHA1Context sha1_ipad_def;
 static SVCSHA1Context sha1_opad_def;
 #endif
 
+#ifdef SDK_PORT
+void SVC_SHA1Update(SVCSHA1Context *ctx, const void *data, u32 len){}
+void SVC_SHA1GetHash(SVCSHA1Context *ctx, void *md){}
+#endif
+
 static u8 CARDiHmacKey[] ATTRIBUTE_ALIGN(4) = {
     0x21, 0x06, 0xc0, 0xde, 0xba, 0x98, 0xce, 0x3f, 0xa6, 0x92, 0xe3,
     0x9d, 0x46, 0xf2, 0xed, 0x01, 0x76, 0xe3, 0xcc, 0x08, 0x56, 0x23,

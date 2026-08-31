@@ -70,6 +70,8 @@ OSIrqFunction OS_IRQTable[OS_IRQ_TABLE_MAX] = {
 #if defined(SDK_ARM9) || defined(SDK_PORT)
 #include <twl/dtcm_begin.h>
 #endif // SDK_ARM9
+
+#ifndef SDK_PORT
 OSIrqFunction OS_IRQTable[OS_IRQ_TABLE_MAX] = {
 #if defined(SDK_ARM9) || defined(SDK_PORT)
     OS_IrqDummy, //  0 VBlank (for ARM9)
@@ -116,6 +118,7 @@ OSIrqFunction OS_IRQTable[OS_IRQ_TABLE_MAX] = {
     OSi_IrqNDma2, // 30 new DMA2
     OSi_IrqNDma3, // 31 new DMA3
 };
+#endif
 
 #ifdef SDK_ARM7
 OSIrqFunction OS_IRQTable2[OS_IRQ_TABLE2_MAX] = {
