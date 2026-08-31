@@ -19,7 +19,15 @@ extern void SDK_MAIN_ARENA_LO(void);
 #define OSi_MAIN_ARENA_HI_DEFAULT HW_MAIN_MEM_MAIN_END
 #else
 
+
+#ifdef SDK_PORT
+void SDK_SUBPRIV_ARENA_LO(void)
+{
+
+}
+#else
 extern void SDK_MAIN_ARENA_LO(void);
+#endif
 #define OSi_MAIN_ARENA_LO_DEFAULT_forNITRO                                     \
   ((u32)SDK_MAIN_ARENA_LO) // Defined by LCF
 #define OSi_MAIN_ARENA_HI_DEFAULT_forNITRO HW_MAIN_MEM_MAIN_END
@@ -50,6 +58,23 @@ extern void SDK_SUBPRIV_ARENA_LO(void);
 #endif
 #endif
 
+#ifdef SDK_PORT
+#ifdef SDK_NITRO
+
+#define OSi_MAIN_SUBPRIV_ARENA_LO_DEFAULT                                      \
+  ((u32)SDK_SUBPRIV_ARENA_LO) // Defined by LCF
+#define OSi_MAIN_SUBPRIV_ARENA_HI_DEFAULT HW_MAIN_MEM_SUB_END
+#else
+#define OSi_MAIN_SUBPRIV_ARENA_LO_DEFAULT_forNITRO                             \
+  ((u32)SDK_SUBPRIV_ARENA_LO) // Defined by LCF
+#define OSi_MAIN_SUBPRIV_ARENA_HI_DEFAULT_forNITRO HW_MAIN_MEM_SUB_END
+
+#define OSi_MAIN_SUBPRIV_ARENA_LO_DEFAULT_forTWL                               \
+  ((u32)SDK_SUBPRIV_ARENA_LO) // Defined by LCF
+#define OSi_MAIN_SUBPRIV_ARENA_HI_DEFAULT_forTWL HW_TWL_MAIN_MEM_SUB_END
+#endif
+#endif
+
 #if defined(SDK_ARM9) || defined(SDK_PORT)
 #ifdef SDK_NITRO
 
@@ -59,12 +84,20 @@ extern void SDK_SECTION_ARENA_EX_START(void);
 #define OSi_MAINEX_ARENA_HI_DEFAULT HW_MAIN_MEM_DEBUGGER
 #else
 
+#ifdef SDK_PORT
+void SDK_SECTION_ARENA_EX_START(void) {}
+#else
 extern void SDK_SECTION_ARENA_EX_START(void);
+#endif
 #define OSi_MAINEX_ARENA_LO_DEFAULT_forNITRO                                   \
   ((u32)SDK_SECTION_ARENA_EX_START) // Defined by LCF
 #define OSi_MAINEX_ARENA_HI_DEFAULT_forNITRO HW_MAIN_MEM_DEBUGGER
 
+#ifdef SDK_PORT
+void SDK_LTDMAIN_EX_ARENA_LO(void) {}
+#else
 extern void SDK_LTDMAIN_EX_ARENA_LO(void);
+#endif
 #define OSi_MAINEX_ARENA_LO_DEFAULT_forTWL                                     \
   ((u32)SDK_LTDMAIN_EX_ARENA_LO) // Defined by LCF
 #define OSi_MAINEX_ARENA_HI_DEFAULT_forTWL HW_TWL_MAIN_MEM_DEBUGGER
@@ -73,11 +106,19 @@ extern void SDK_LTDMAIN_EX_ARENA_LO(void);
 
 #if defined(SDK_ARM9) || defined(SDK_PORT)
 
+#ifdef SDK_PORT
+void SDK_SECTION_ARENA_DTCM_START(void) {}
+#endif
+
 extern void SDK_SECTION_ARENA_DTCM_START(void);
 #define OSi_DTCM_ARENA_LO_DEFAULT                                              \
   ((u32)SDK_SECTION_ARENA_DTCM_START) // Defined by LCF
 
+#ifdef SDK_PORT
+void SDK_SECTION_ARENA_ITCM_START(void) {}
+#else
 extern void SDK_SECTION_ARENA_ITCM_START(void);
+#endif
 #define OSi_ITCM_ARENA_LO_DEFAULT                                              \
   ((u32)SDK_SECTION_ARENA_ITCM_START) // Defined by LCF
 #endif
@@ -382,6 +423,50 @@ void *OS_GetInitArenaLo(OSArenaId id) {
   SDK_ARENAID_ASSERT(id);
 
   switch (id) {
+#ifdef SDK_PORT
+    case OS_ARENA_MAIN:
+        return (void *)(HW_MAIN_MEM + 0xe3e0);
+    case OS_ARENA_MAINEX:
+    if (!OSi_MainExArenaEnabled) {
+      return (void *)0;
+    } else {
+      u32 size = OS_GetConsoleType() & OS_CONSOLE_SIZE_MASK;
+#ifdef SDK_NITRO
+      return (void *)((size == OS_CONSOLE_SIZE_4MB)
+                          ? 0
+                          : OSi_MAINEX_ARENA_LO_DEFAULT);
+#else
+      return (OS_IsRunOnTwl())
+                 ? (void *)((size == OS_CONSOLE_SIZE_16MB)
+                                ? 0
+                                : OSi_MAINEX_ARENA_LO_DEFAULT_forTWL)
+                 : (void *)((size == OS_CONSOLE_SIZE_4MB)
+                                ? 0
+                                : OSi_MAINEX_ARENA_LO_DEFAULT_forNITRO);
+#endif
+    case OS_ARENA_ITCM:
+        return (void *)OSi_ITCM_ARENA_LO_DEFAULT;
+    case OS_ARENA_DTCM:
+        return (void *)OSi_DTCM_ARENA_LO_DEFAULT;
+    case OS_ARENA_SHARED:
+        return (void *)HW_SHARED_ARENA_LO_DEFAULT;
+    case OS_ARENA_WRAM_MAIN:
+        return (void *)OSi_WRAM_MAIN_ARENA_LO_DEFAULT;
+    case OS_ARENA_MAIN_SUBPRIV:
+#ifdef SDK_NITRO
+    return (void *)OSi_MAIN_SUBPRIV_ARENA_LO_DEFAULT;
+#else
+    return (OS_IsRunOnTwl())
+               ? (void *)OSi_MAIN_SUBPRIV_ARENA_LO_DEFAULT_forTWL
+               : (void *)OSi_MAIN_SUBPRIV_ARENA_LO_DEFAULT_forNITRO;
+
+#endif
+    case OS_ARENA_WRAM_SUBPRIV:
+        {
+            u64     privWramLo = HW_PRV_WRAM;
+            return (void *)privWramLo;
+        }
+#else
 #if defined(SDK_ARM9) || defined(SDK_PORT)
   case OS_ARENA_MAIN:
 
@@ -447,8 +532,10 @@ void *OS_GetInitArenaLo(OSArenaId id) {
     return (void *)privWramLo;
   }
 #endif
+#endif
   default:
     SDK_WARNING(0, "Bad arena id");
+  }
   }
 
   return NULL;

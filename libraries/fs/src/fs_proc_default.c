@@ -856,6 +856,12 @@ static FSResult FSi_SRLArchiveProc(FSFile *file, FSCommandType cmd) {
   }
 }
 
+#ifdef SDK_PORT
+u8 *CARDiHashBufferAddress = NULL;
+u32 CARDiHashBufferLength = 0;
+static CARDRomHashContext context[1];
+#endif
+
 BOOL FSi_MountSRLFile(FSArchive *arc, FSFile *file, CARDRomHashContext *hash) {
   BOOL retval = FALSE;
   static CARDRomHeaderTWL header[1]

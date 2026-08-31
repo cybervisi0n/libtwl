@@ -1,6 +1,17 @@
-#ifdef SDK_ARM9
 #include <nitro.h>
 
+#ifdef SDK_PORT
+void SVC_CpuSet(const void *srcp, void *destp, u32 dmaCntData) {
+  // TODO: stubbed
+}
+
+void SVC_CpuSetFast(const void *srcp, void *destp, u32 dmaCntData) {
+  // TODO: stubbed
+}
+
+#endif
+
+#ifdef SDK_ARM9
 asm void SVC_WaitByLoop(s32 count) { swi 3 bx lr }
 
 #if 0

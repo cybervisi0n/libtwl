@@ -4,6 +4,13 @@
 #include <nitro.h>
 #endif
 
+#ifdef SDK_PORT
+#include "simulator/sim.h"
+#include <simulator/queue.h>
+extern SIM_queue_t * pxiQueuePtr;
+extern SIM_queue_t * pxi7to9QueuePtr;
+#endif
+
 static u16 FifoCtrlInit = 0;
 static PXIFifoCallback FifoRecvCallbackTable[PXI_MAX_FIFO_TAG];
 #ifdef SDK_PORT
@@ -143,6 +150,29 @@ int PXI_SendWordByFifo(int fifotag, u32 data, BOOL err)
 
   return PXIi_SetToFifo(fifomsg.raw);
 }
+
+#ifdef SDK_PORT
+int PXI_SendWordByFifo7(int fifotag, u64 data, BOOL err)
+{
+    PXIFifoMessage fifomsg;
+
+    SDK_ASSERTMSG(0 <= fifotag && fifotag < PXI_MAX_FIFO_TAG, "[FifoTag] out of range");
+    SDK_ASSERTMSG(data < (1UL << PXI_FIFOMESSAGE_BITSZ_DATA), "[data] out of range");
+
+    fifomsg.e.tag = (PXIFifoTag)fifotag;
+    fifomsg.e.err = (u32)err;
+    fifomsg.e.data = data;
+
+    WIN_PXIFifoMessage * fifoMsgPtr;
+    fifoMsgPtr = malloc( sizeof( WIN_PXIFifoMessage ) );
+    fifoMsgPtr->e.tag = (PXIFifoTag)fifotag;
+    fifoMsgPtr->e.err = (u32)err;
+    fifoMsgPtr->e.data = data;
+    SIM_queue_write( pxi7to9QueuePtr, (void *)fifoMsgPtr );
+    SIM_PostPxi7to9Thread();
+    return PXI_FIFO_SUCCESS;
+}
+#endif
 
 static inline PXIFifoStatus PXIi_SetToFifo(u32 data) {
   OSIntrMode enabled;

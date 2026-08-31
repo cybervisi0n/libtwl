@@ -167,8 +167,8 @@ libtwl_dep = declare_dependency(
     compile_args: libtwl_args,
     include_directories: libtwl_includes,
     link_with: libtwl_libs + libtwl_prebuilt,
-    sources: fx_const_h
-    #objects: crt0_obj
+    sources: fx_const_h,
+    objects: crt0_obj
 )
 
 meson.override_dependency('NitroSDK', libtwl_dep)

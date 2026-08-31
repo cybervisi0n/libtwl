@@ -513,7 +513,7 @@ BOOL SND_NoteOn(SNDExChannel *ch_p, int key, int velocity, s32 length,
 
 #endif
 
-#ifdef SDK_ARM7
+#if defined(SDK_ARM7) || defined(SDK_PORT)
 
 static const SNDWaveData *GetWaveData(const SNDBankData *bank, int waveArcNo,
                                       int waveIndex) {

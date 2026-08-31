@@ -54,9 +54,14 @@ int SVC_DecryptSignDER(const SVCSignHeapContext *acmemory_pool,
                        const void *key_ptr  //  Pointer to key
 );
 
+#ifdef SDK_PORT
+// TODO stubs for now
+static inline void SVC_SHA1Init(SVCSHA1Context *ctx) {}
+#else
 void SVC_SHA1Init(SVCSHA1Context *ctx);
 void SVC_SHA1Update(SVCSHA1Context *ctx, const void *data, u32 len);
 void SVC_SHA1GetHash(SVCSHA1Context *ctx, void *md);
+#endif
 
 void SVC_CalcSHA1(void *md,         //  Output domain
                   const void *data, //  Pointer to data

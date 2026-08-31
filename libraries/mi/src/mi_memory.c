@@ -597,6 +597,10 @@ static asm void CpuCopyFastReverse(register const void *srcp,
 #endif
 #ifdef SDK_PORT
 static void CpuCopyFastReverse(const void *srcp, void *destp, u32 size) {}
+
+void MI_CpuFill(register void *dstp, register u8 data, register u32 size) {
+  memset(dstp, data, size);
+}
 #endif
 
 void MIi_CpuMoveFast(const void *src, void *dest, u32 size) {
@@ -1215,6 +1219,12 @@ int MI_CpuComp8(const void *mem1, const void *mem2, u32 size) {
 
   return 0;
 }
+
+#ifdef SDK_PORT
+// TODO: stubbed
+void MI_CpuMove(register const void *srcp, register void *destp,
+                    register u32 size) {}
+#endif
 
 #ifdef SDK_BUILD_ARM
 #if PLATFORM_BYTES_ENDIAN == PLATFORM_ENDIAN_LITTLE
