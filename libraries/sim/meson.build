@@ -23,6 +23,13 @@ enet_dep = declare_dependency(dependencies: [enet_lib])
 libsim_dependencies = [sdl2_dep, enet_dep]
 libsim_args = []
 
+if(build_target == 'win64')
+ws2_32_lib = meson.get_compiler('c').find_library('ws2_32')
+
+ws2_32_dep = declare_dependency(dependencies: [ws2_32_lib])
+libsim_dependencies += ws2_32_dep
+endif
+
 if(get_option('tracy_enable') == true)
     if(build_target =='linux' or build_target == 'win64')
         tracy_native = dependency(
