@@ -5,6 +5,12 @@
 
 #include <nitro/mi/dma.h>
 
+#ifdef SDK_PORT
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -110,49 +116,121 @@ BOOL CARDi_RequestWriteSectorCommand(u32 src, u32 dst, u32 len, BOOL verify,
 SDK_INLINE BOOL CARDi_ReadBackup(u32 src, void *dst, u32 len,
                                  MIDmaCallback callback, void *arg,
                                  BOOL is_async) {
+  #ifdef SDK_PORT
+  FILE * backupFilePtr;
+  backupFilePtr = fopen("save.bin", "rb");
+  if(!backupFilePtr) {
+    // File does not exist. Create the file
+    backupFilePtr = fopen("save.bin", "wb");
+
+    // Zero out the file with the len
+    u8 * buf = (u8*)malloc(len + src);
+    memset(buf, 0, len + src);
+    fwrite(buf, 1, len + src, backupFilePtr);
+    fclose(backupFilePtr);
+    free(buf);
+
+    // Reopen file
+    backupFilePtr = fopen("save.bin", "rb");
+  }
+  fseek(backupFilePtr, src, SEEK_SET);
+  fread(dst, 1, len, backupFilePtr);
+  fclose(backupFilePtr);
+  if( callback != NULL )
+  {
+    callback(arg);
+  }
+
+  return TRUE;
+  #else
   return CARDi_RequestStreamCommand((u32)src, (u32)dst, len, callback, arg,
                                     is_async, CARD_REQ_READ_BACKUP, 1,
                                     CARD_REQUEST_MODE_RECV);
+  #endif
 }
 
 SDK_INLINE BOOL CARDi_ProgramBackup(u32 dst, const void *src, u32 len,
                                     MIDmaCallback callback, void *arg,
                                     BOOL is_async) {
+  #ifdef SDK_PORT
+  return CARDi_RequestStreamCommand(
+      (u64)src, (u64)dst, len, callback, arg, is_async, CARD_REQ_PROGRAM_BACKUP,
+      CARD_RETRY_COUNT_MAX, CARD_REQUEST_MODE_SEND);
+  #else
   return CARDi_RequestStreamCommand(
       (u32)src, (u32)dst, len, callback, arg, is_async, CARD_REQ_PROGRAM_BACKUP,
       CARD_RETRY_COUNT_MAX, CARD_REQUEST_MODE_SEND);
+  #endif
 }
 
 SDK_INLINE BOOL CARDi_WriteBackup(u32 dst, const void *src, u32 len,
                                   MIDmaCallback callback, void *arg,
                                   BOOL is_async) {
+  #ifdef SDK_PORT
+  FILE * backupFilePtr;
+  backupFilePtr = fopen("save.bin", "rb+");
+  fseek(backupFilePtr, dst, SEEK_SET);
+  fwrite(src, 1, len, backupFilePtr);
+  fclose(backupFilePtr);
+  if( callback != NULL )
+  {
+    callback(arg);
+  }
+  return TRUE;
+  #else
   return CARDi_RequestStreamCommand(
       (u32)src, (u32)dst, len, callback, arg, is_async, CARD_REQ_WRITE_BACKUP,
       CARD_RETRY_COUNT_MAX, CARD_REQUEST_MODE_SEND);
+  #endif
 }
 
 SDK_INLINE BOOL CARDi_VerifyBackup(u32 dst, const void *src, u32 len,
                                    MIDmaCallback callback, void *arg,
                                    BOOL is_async) {
+  #ifdef SDK_PORT
+  return CARDi_RequestStreamCommand((u64)src, (u64)dst, len, callback, arg,
+                                    is_async, CARD_REQ_VERIFY_BACKUP, 1,
+                                    CARD_REQUEST_MODE_SEND);
+  #else
   return CARDi_RequestStreamCommand((u32)src, (u32)dst, len, callback, arg,
                                     is_async, CARD_REQ_VERIFY_BACKUP, 1,
                                     CARD_REQUEST_MODE_SEND);
+  #endif
 }
 
 SDK_INLINE BOOL CARDi_ProgramAndVerifyBackup(u32 dst, const void *src, u32 len,
                                              MIDmaCallback callback, void *arg,
                                              BOOL is_async) {
+  #ifdef SDK_PORT
+  return CARDi_RequestStreamCommand(
+      (u64)src, (u64)dst, len, callback, arg, is_async, CARD_REQ_PROGRAM_BACKUP,
+      CARD_RETRY_COUNT_MAX, CARD_REQUEST_MODE_SEND_VERIFY);
+  #else
   return CARDi_RequestStreamCommand(
       (u32)src, (u32)dst, len, callback, arg, is_async, CARD_REQ_PROGRAM_BACKUP,
       CARD_RETRY_COUNT_MAX, CARD_REQUEST_MODE_SEND_VERIFY);
+  #endif
 }
 
 SDK_INLINE BOOL CARDi_WriteAndVerifyBackup(u32 dst, const void *src, u32 len,
                                            MIDmaCallback callback, void *arg,
                                            BOOL is_async) {
+  #ifdef SDK_PORT
+  FILE * backupFilePtr;
+  backupFilePtr = fopen("save.bin", "rb+");
+  fseek(backupFilePtr, dst, SEEK_SET);
+  fwrite(src, 1, len, backupFilePtr);
+  fclose(backupFilePtr);
+  if( callback != NULL )
+  {
+    callback(arg);
+  }
+  return CARD_RESULT_SUCCESS;
+  #else
   return CARDi_RequestStreamCommand(
       (u32)src, (u32)dst, len, callback, arg, is_async, CARD_REQ_WRITE_BACKUP,
       CARD_RETRY_COUNT_MAX, CARD_REQUEST_MODE_SEND_VERIFY);
+  #endif
 }
 
 SDK_INLINE BOOL CARDi_EraseBackupSector(u32 dst, u32 len,
@@ -265,27 +343,46 @@ SDK_INLINE BOOL CARD_EraseBackupChip(void) {
 
 SDK_INLINE void CARD_WriteBackupSectorAsync(u32 dst, const void *src, u32 len,
                                             MIDmaCallback callback, void *arg) {
+  #ifdef SDK_PORT
+  (void)CARDi_RequestWriteSectorCommand((u64)src, dst, len, FALSE, callback, arg, TRUE);
+  #else
   (void)CARDi_RequestWriteSectorCommand((u32)src, dst, len, FALSE, callback,
                                         arg, TRUE);
+  #endif
 }
 
 SDK_INLINE BOOL CARD_WriteBackupSector(u32 dst, const void *src, u32 len) {
+  #ifdef SDK_PORT
+  return CARDi_RequestWriteSectorCommand((u64)src, dst, len, FALSE, NULL, NULL,
+                                         FALSE);
+  #else
   return CARDi_RequestWriteSectorCommand((u32)src, dst, len, FALSE, NULL, NULL,
                                          FALSE);
+  #endif
 }
 
 SDK_INLINE void CARD_WriteAndVerifyBackupSectorAsync(u32 dst, const void *src,
                                                      u32 len,
                                                      MIDmaCallback callback,
                                                      void *arg) {
+  #ifdef SDK_PORT
+  (void)CARDi_RequestWriteSectorCommand((u64)src, dst, len, TRUE, callback, arg,
+                                        TRUE);
+  #else
   (void)CARDi_RequestWriteSectorCommand((u32)src, dst, len, TRUE, callback, arg,
                                         TRUE);
+  #endif
 }
 
 SDK_INLINE BOOL CARD_WriteAndVerifyBackupSector(u32 dst, const void *src,
                                                 u32 len) {
+  #ifdef SDK_PORT
+  return CARDi_RequestWriteSectorCommand((u64)src, dst, len, TRUE, NULL, NULL,
+                                         FALSE);
+  #else
   return CARDi_RequestWriteSectorCommand((u32)src, dst, len, TRUE, NULL, NULL,
                                          FALSE);
+  #endif
 }
 
 int CARDi_AccessStatus(CARDRequest command, u8 value);

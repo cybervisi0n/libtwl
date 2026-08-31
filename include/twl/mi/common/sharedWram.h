@@ -160,6 +160,7 @@ SDK_INLINE int MIi_AddressToWramSlot(const void *address, MIWramPos *type) {
   SDK_COMPILER_ASSERT(HW_WRAM_C < HW_WRAM_B);
   SDK_COMPILER_ASSERT(wramBCbototm - wramBCtop ==
                       HW_WRAM_B_SIZE + HW_WRAM_C_SIZE);
+  #ifdef SDK_BUILD_ARM
   u32 slot = (u32)(((u32)address - wramBCtop) / MI_WRAM_B_SLOT_SIZE);
   if (slot < MI_WRAM_C_MAX_NUM) {
     if (type) {
@@ -173,6 +174,9 @@ SDK_INLINE int MIi_AddressToWramSlot(const void *address, MIWramPos *type) {
     retval = (int)(slot - MI_WRAM_C_MAX_NUM);
   }
   return retval;
+  #else
+  return 0;
+  #endif
 }
 
 void MI_InitWramManager(void);

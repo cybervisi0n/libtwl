@@ -12,7 +12,11 @@ extern "C" {
 #ifndef SDK_ASM
 #include <nitro/types.h>
 extern u32 SDK_AUTOLOAD_DTCM_START[];
+#ifdef SDK_PORT
+#define HW_DTCM ((u64)SDK_AUTOLOAD_DTCM_START)
+#else
 #define HW_DTCM ((u32)SDK_AUTOLOAD_DTCM_START)
+#endif
 #else
 .extern SDK_AUTOLOAD_DTCM_START
 #define HW_DTCM SDK_AUTOLOAD_DTCM_START

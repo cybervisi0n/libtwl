@@ -1270,10 +1270,18 @@ void *OS_GetThreadParameter(const OSThread *thread) {
   return thread->userParameter;
 }
 
+#ifdef SDK_PORT
+// Avoid conflict with "errno"
+void OSi_SetSystemErrno(OSThread *thread, int myErrNo) {
+  SDK_ASSERT(thread);
+  thread->systemErrno = myErrNo;
+}
+#else
 void OSi_SetSystemErrno(OSThread *thread, int errno) {
   SDK_ASSERT(thread);
   thread->systemErrno = errno;
 }
+#endif
 
 int OSi_GetSystemErrno(const OSThread *thread) {
   SDK_ASSERT(thread);

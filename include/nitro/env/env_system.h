@@ -177,7 +177,11 @@ static inline BOOL ENV_GetBinaryAndSize(const char *name, void **retPtr,
 
 static inline BOOL ENV_GetU8(const char *name, u8 *retVal) {
   int len;
+  #ifdef SDK_PORT
+  u64 val = (u64)ENVi_GetPtrAndLength(name, &len);
+  #else
   u32 val = (u32)ENVi_GetPtrAndLength(name, &len);
+  #endif
   if (!len) {
     return FALSE;
   } else {
@@ -188,7 +192,11 @@ static inline BOOL ENV_GetU8(const char *name, u8 *retVal) {
 
 static inline BOOL ENV_GetS8(const char *name, s8 *retVal) {
   int len;
+  #ifdef SDK_PORT
+  u64 val = (u64)ENVi_GetPtrAndLength(name, &len);
+  #else
   u32 val = (u32)ENVi_GetPtrAndLength(name, &len);
+  #endif
   if (!len) {
     return FALSE;
   } else {
@@ -199,7 +207,11 @@ static inline BOOL ENV_GetS8(const char *name, s8 *retVal) {
 
 static inline BOOL ENV_GetU16(const char *name, u16 *retVal) {
   int len;
+  #ifdef SDK_PORT
+  u64 val = (u64)ENVi_GetPtrAndLength(name, &len);
+  #else
   u32 val = (u32)ENVi_GetPtrAndLength(name, &len);
+  #endif
   if (!len) {
     return FALSE;
   } else {
@@ -210,7 +222,11 @@ static inline BOOL ENV_GetU16(const char *name, u16 *retVal) {
 
 static inline BOOL ENV_GetS16(const char *name, s16 *retVal) {
   int len;
+  #ifdef SDK_PORT
+  u64 val = (u64)ENVi_GetPtrAndLength(name, &len);
+  #else
   u32 val = (u32)ENVi_GetPtrAndLength(name, &len);
+  #endif
   if (!len) {
     return FALSE;
   } else {
@@ -221,7 +237,11 @@ static inline BOOL ENV_GetS16(const char *name, s16 *retVal) {
 
 static inline BOOL ENV_GetU32(const char *name, u32 *retVal) {
   int len;
+#ifdef SDK_PORT
+  u64 val = (u64)ENVi_GetPtrAndLength(name, &len);
+#else
   u32 val = (u32)ENVi_GetPtrAndLength(name, &len);
+#endif
   if (!len) {
     return FALSE;
   } else {
@@ -232,7 +252,11 @@ static inline BOOL ENV_GetU32(const char *name, u32 *retVal) {
 
 static inline BOOL ENV_GetS32(const char *name, s32 *retVal) {
   int len;
+#ifdef SDK_PORT
+  u64 val = (u64)ENVi_GetPtrAndLength(name, &len);
+#else
   u32 val = (u32)ENVi_GetPtrAndLength(name, &len);
+#endif
   if (!len) {
     return FALSE;
   } else {
@@ -243,7 +267,11 @@ static inline BOOL ENV_GetS32(const char *name, s32 *retVal) {
 
 static inline BOOL ENV_GetBOOL(const char *name, BOOL *retVal) {
   int len;
+#ifdef SDK_PORT
+  u64 val = (u64)ENVi_GetPtrAndLength(name, &len);
+#else
   u32 val = (u32)ENVi_GetPtrAndLength(name, &len);
+#endif
   if (!len) {
     return FALSE;
   } else {

@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include <simulator/config/sim_config.h>
 #include <simulator/sim_debug.h>
+#include <pthread.h>
 
 #include "simulator/assert.h"
 

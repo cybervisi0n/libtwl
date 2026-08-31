@@ -341,30 +341,55 @@ static inline void G2_ChangeBlendAlpha(int ev1, int ev2) {
 
 static inline void G2_SetBG2Affine(const MtxFx22 *mtx, int centerX, int centerY,
                                    int x1, int y1) {
+#ifdef SDK_PORT
+  G2x_SetBGyAffine_((u64)&reg_G2_BG2PA, mtx, centerX, centerY, x1, y1);
+#else
   G2x_SetBGyAffine_((u32)&reg_G2_BG2PA, mtx, centerX, centerY, x1, y1);
+#endif
 }
 
 static inline void G2_SetBG3Affine(const MtxFx22 *mtx, int centerX, int centerY,
                                    int x1, int y1) {
+#ifdef SDK_PORT
+  G2x_SetBGyAffine_((u64)&reg_G2_BG3PA, mtx, centerX, centerY, x1, y1);
+#else
   G2x_SetBGyAffine_((u32)&reg_G2_BG3PA, mtx, centerX, centerY, x1, y1);
+#endif
 }
 
 static inline void G2_SetBlendAlpha(int plane1, int plane2, int ev1, int ev2) {
+#ifdef SDK_PORT
+  G2x_SetBlendAlpha_((u64)&reg_G2_BLDCNT, plane1, plane2, ev1, ev2);
+#else
   G2x_SetBlendAlpha_((u32)&reg_G2_BLDCNT, plane1, plane2, ev1, ev2);
+#endif
 }
 
 static inline void G2_SetBlendBrightness(int plane, int brightness) {
+#ifdef SDK_PORT
+  G2x_SetBlendBrightness_((u64)&reg_G2_BLDCNT, plane, brightness);
+#else
   G2x_SetBlendBrightness_((u32)&reg_G2_BLDCNT, plane, brightness);
+#endif
 }
 
 static inline void G2_SetBlendBrightnessExt(int plane1, int plane2, int ev1,
                                             int ev2, int brightness) {
+#ifdef SDK_PORT
+  G2x_SetBlendBrightnessExt_((u64)&reg_G2_BLDCNT, plane1, plane2, ev1, ev2,
+                             brightness);
+#else
   G2x_SetBlendBrightnessExt_((u32)&reg_G2_BLDCNT, plane1, plane2, ev1, ev2,
                              brightness);
+#endif
 }
 
 static inline void G2_ChangeBlendBrightness(int brightness) {
+#ifdef SDK_PORT
+  G2x_ChangeBlendBrightness_((u64)&reg_G2_BLDCNT, brightness);
+#else
   G2x_ChangeBlendBrightness_((u32)&reg_G2_BLDCNT, brightness);
+#endif
 }
 
 static inline void G2S_SetBG0Offset(int hOffset, int vOffset) {
@@ -566,30 +591,55 @@ static inline void G2S_ChangeBlendAlpha(int ev1, int ev2) {
 
 static inline void G2S_SetBG2Affine(const MtxFx22 *mtx, int centerX,
                                     int centerY, int x1, int y1) {
+#ifdef SDK_PORT
+  G2x_SetBGyAffine_((u64)&reg_G2S_DB_BG2PA, mtx, centerX, centerY, x1, y1);
+#else
   G2x_SetBGyAffine_((u32)&reg_G2S_DB_BG2PA, mtx, centerX, centerY, x1, y1);
+#endif
 }
 
 static inline void G2S_SetBG3Affine(const MtxFx22 *mtx, int centerX,
                                     int centerY, int x1, int y1) {
+#ifdef SDK_PORT
+  G2x_SetBGyAffine_((u64)&reg_G2S_DB_BG3PA, mtx, centerX, centerY, x1, y1);
+#else
   G2x_SetBGyAffine_((u32)&reg_G2S_DB_BG3PA, mtx, centerX, centerY, x1, y1);
+#endif
 }
 
 static inline void G2S_SetBlendAlpha(int plane1, int plane2, int ev1, int ev2) {
+#ifdef SDK_PORT
+  G2x_SetBlendAlpha_((u64)&reg_G2S_DB_BLDCNT, plane1, plane2, ev1, ev2);
+#else
   G2x_SetBlendAlpha_((u32)&reg_G2S_DB_BLDCNT, plane1, plane2, ev1, ev2);
+#endif
 }
 
 static inline void G2S_SetBlendBrightness(int plane, int brightness) {
+#ifdef SDK_PORT
+  G2x_SetBlendBrightness_((u64)&reg_G2S_DB_BLDCNT, plane, brightness);
+#else
   G2x_SetBlendBrightness_((u32)&reg_G2S_DB_BLDCNT, plane, brightness);
+#endif
 }
 
 static inline void G2S_SetBlendBrightnessExt(int plane1, int plane2, int ev1,
                                              int ev2, int brightness) {
+#ifdef SDK_PORT
+  G2x_SetBlendBrightnessExt_((u64)&reg_G2S_DB_BLDCNT, plane1, plane2, ev1, ev2,
+                             brightness);
+#else
   G2x_SetBlendBrightnessExt_((u32)&reg_G2S_DB_BLDCNT, plane1, plane2, ev1, ev2,
                              brightness);
+#endif
 }
 
 static inline void G2S_ChangeBlendBrightness(int brightness) {
+#ifdef SDK_PORT
+  G2x_ChangeBlendBrightness_((u64)&reg_G2S_DB_BLDCNT, brightness);
+#else
   G2x_ChangeBlendBrightness_((u32)&reg_G2S_DB_BLDCNT, brightness);
+#endif
 }
 
 #endif // SDK_FROM_TOOL
