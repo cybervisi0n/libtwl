@@ -2154,6 +2154,8 @@ int main(int argc, char *argv[]) {
   strncpy((char *)&cardHeader->maker_code, makerCode, sizeof(u16));
 #endif
 
+  void * test = (void *)HW_MAIN_MEM_SHARED;
+
   memset((void *)HW_MAIN_MEM_SHARED, 0, 0x160);
 
   SIM_pxiInit();

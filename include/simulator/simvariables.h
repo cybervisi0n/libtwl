@@ -417,6 +417,10 @@ TPData s_tpData;
 u8 s_HW_WIRELESS_INTF0[0x8000];
 u8 s_HW_WIRELESS_INTF1[0x8000];
 
+//MMAP TWL
+u8 s_HW_TWL_MAIN_MEM[0x01000000];
+u8 s_HW_TWL_MAIN_MEM_EX[0x01000000];
+
 
 #ifdef  __cplusplus
 }
