@@ -182,9 +182,13 @@ asm
     void OS_IrqHandler_ThreadSwitch(void);
 
 static inline BOOL OS_EnableIrq(void) {
+  #ifdef SDK_PORT
+  return TRUE;
+  #else
   u16 prep = reg_OS_IME;
   reg_OS_IME = OS_IME_ENABLE;
   return (BOOL)prep;
+  #endif
 }
 
 static inline BOOL OS_DisableIrq(void) {

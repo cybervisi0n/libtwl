@@ -2,9 +2,17 @@
 #define NITRO_G2_OAM_H_
 
 #ifndef SDK_TWL
+#ifdef SDK_PORT
+#include <nitro/hw/X86/mmap_global.h>
+#else
 #include <nitro/hw/ARM9/mmap_global.h>
+#endif
+#else
+#ifdef SDK_PORT
+#include <twl/hw/X86/mmap_global.h>
 #else
 #include <twl/hw/ARM9/mmap_global.h>
+#endif
 #endif
 
 #include <nitro/gx/gxcommon.h>

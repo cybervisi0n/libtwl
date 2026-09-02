@@ -12,7 +12,11 @@ typedef struct {
 SCFGFuseInfo SCFGi_FuseInfo;
 
 static void SCFGi_SwitchCpuSpeed(SCFGCpuSpeed cpuSpeed);
+#ifdef SDK_PORT
+static void SCFGi_CommonCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void SCFGi_CommonCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 static void SCFGi_SendPxiData(u32 command, u16 ordinal, u16 data);
 static void SCFGi_Sync(u64 fuseData, void *arg);
 
@@ -71,7 +75,12 @@ void SCFG_SetCpuSpeed(SCFGCpuSpeed cpuSpeed) {
 
 #define SCFGi_READ_FUSE_DONE 0xf
 
-static void SCFGi_CommonCallback(PXIFifoTag tag, u32 pxiData, BOOL err) {
+#ifdef SDK_PORT
+static void SCFGi_CommonCallback(PXIFifoTag tag, u64 pxiData, BOOL err)
+#else
+static void SCFGi_CommonCallback(PXIFifoTag tag, u32 pxiData, BOOL err)
+#endif
+{
 #pragma unused(tag, err)
   u16 command =
       (u16)((pxiData & SCFG_PXI_COMMAND_MASK) >> SCFG_PXI_COMMAND_SHIFT);

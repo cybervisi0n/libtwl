@@ -33,7 +33,12 @@ void NWMi_ClearFifoRecvFlag(void) {
   }
 }
 
-void NWMi_ReceiveFifo9(PXIFifoTag tag, u32 fifo_buf_adr, BOOL err) {
+#ifdef SDK_PORT
+void NWMi_ReceiveFifo9(PXIFifoTag tag, u64 fifo_buf_adr, BOOL err)
+#else
+void NWMi_ReceiveFifo9(PXIFifoTag tag, u32 fifo_buf_adr, BOOL err)
+#endif
+{
 #pragma unused(tag)
   NWMCallback *pCallback = (NWMCallback *)fifo_buf_adr;
   NWMCallbackFunc callback;

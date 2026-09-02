@@ -3,6 +3,11 @@
 
 #include <nitro/fs/archive.h>
 
+#ifdef SDK_PORT
+#include <stdio.h>
+#include <stdlib.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,6 +30,9 @@ typedef struct FSFile {
     u8 reserved2[24];
     FSROMFATCommandInfo arg;
   };
+	#ifdef SDK_PORT
+	FILE* pcFilePtr;
+	#endif
 } FSFile;
 
 SDK_COMPILER_ASSERT(sizeof(FSFile) == 72);

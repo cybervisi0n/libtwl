@@ -16,7 +16,11 @@ static OSMessage bufMsg[WM_BUF_MSG_NUM]; // Request queue buffer for WM7
 static PMSleepCallbackInfo
     sleepCbInfo; // Sleep callback information to register with the PM library
 
+#ifdef SDK_PORT
+static void WmReceiveFifo(PXIFifoTag tag, u64 fifo_buf_adr, BOOL err);
+#else
 static void WmReceiveFifo(PXIFifoTag tag, u32 fifo_buf_adr, BOOL err);
+#endif
 static void WmClearFifoRecvFlag(void);
 static WMErrCode WmInitCore(void *wmSysBuf, u16 dmaNo, u32 bufSize);
 static u32 *WmGetCommandBuffer4Arm7(void);
@@ -332,7 +336,12 @@ WMErrCode WMi_CheckStateEx(s32 paramNum, ...) {
   return result;
 }
 
-static void WmReceiveFifo(PXIFifoTag tag, u32 fifo_buf_adr, BOOL err) {
+#ifdef SDK_PORT
+static void WmReceiveFifo(PXIFifoTag tag, u64 fifo_buf_adr, BOOL err)
+#else
+static void WmReceiveFifo(PXIFifoTag tag, u32 fifo_buf_adr, BOOL err)
+#endif
+{
 #pragma unused(tag)
 
   WMCallback *callback_p = (WMCallback *)fifo_buf_adr;

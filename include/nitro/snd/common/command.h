@@ -51,7 +51,11 @@ typedef enum SNDCommandID {
 typedef struct SNDCommand {
   struct SNDCommand *next;
   SNDCommandID id;
+  #ifdef SDK_PORT
+  u64 arg[4];
+  #else
   u32 arg[4];
+  #endif
 } SNDCommand;
 
 void SND_CommandInit(void);

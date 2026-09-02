@@ -3,9 +3,17 @@
 
 #include <nitro/hw/common/lcd.h>
 #ifndef SDK_TWL
+#ifdef SDK_PORT
+#include <nitro/hw/X86/ioreg.h>
+#else
 #include <nitro/hw/ARM7/ioreg.h>
+#endif
+#else
+#ifdef SDK_PORT
+#include <twl/hw/X86/ioreg.h>
 #else
 #include <twl/hw/ARM7/ioreg.h>
+#endif
 #endif
 
 #ifdef __cplusplus

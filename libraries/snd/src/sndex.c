@@ -62,7 +62,11 @@ static volatile BOOL isStoreVolume =
 static u8 storeVolume = 0; // Value of the volume before it is temporarily
                            // changed by SNDEXi_SetIgnoreHWVolume
 
+#ifdef SDK_PORT
+static void CommonCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void CommonCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 static void SyncCallback(SNDEXResult result, void *arg);
 static BOOL SendCommand(u8 command, u8 param);
 static BOOL SendCommandEx(u8 command, u16 param);
@@ -867,7 +871,12 @@ SNDEXResult SNDEXi_PostProcessForShutterSound(SNDEXCallback callback,
   return SNDEX_RESULT_SUCCESS;
 }
 
-static void CommonCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+static void CommonCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+static void CommonCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
   u8 command = (u8)((data & SNDEX_PXI_COMMAND_MASK) >> SNDEX_PXI_COMMAND_SHIFT);
   u8 result = (u8)((data & SNDEX_PXI_RESULT_MASK) >> SNDEX_PXI_RESULT_SHIFT);
   u8 param =

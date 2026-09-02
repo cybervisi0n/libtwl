@@ -8,7 +8,11 @@
 #define TP_CALIBRATE_DOT2ORIGIN_SCALE_SHIFT                                    \
   (TP_CALIBRATE_DOT_SCALE_SHIFT - TP_CALIBRATE_ORIGIN_SCALE_SHIFT)
 
+#ifdef SDK_PORT
+static void TPi_TpCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void TPi_TpCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 
 typedef struct {
   s32 x0;          // X coordinate intercept
@@ -119,7 +123,12 @@ static inline void TPi_ErrorAtPxi(TPRequestCommand command) {
   }
 }
 
-static void TPi_TpCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+static void TPi_TpCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+static void TPi_TpCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
 #pragma unused(tag)
 
   u16 result;

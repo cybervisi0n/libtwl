@@ -1,6 +1,10 @@
 #ifndef NITRO_OS_MUTEX_H_
 #define NITRO_OS_MUTEX_H_
 
+#ifdef SDK_PORT
+#include <SDL2/SDL.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,6 +37,9 @@ struct OSMutex {
   OSMutex *next; // link for OSThread.queueMutex
 #else
   OSMutexLink link;
+#endif
+#ifdef SDK_PORT
+  SDL_mutex * sdlMutex;
 #endif
 };
 #pragma warn_padding reset

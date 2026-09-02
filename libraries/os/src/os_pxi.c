@@ -13,7 +13,12 @@ void OSi_SetTerminatePxiOccurred(void) { OSi_IsTerminateOccurred = TRUE; }
 
 #endif // SDK_TWL
 
-void OSi_CommonCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+void OSi_CommonCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+void OSi_CommonCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
 #pragma unused(tag, err)
   u16 command;
   u16 commandArg;

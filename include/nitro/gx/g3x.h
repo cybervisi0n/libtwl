@@ -4,11 +4,21 @@
 #include <nitro/gx/gxcommon.h>
 
 #ifndef SDK_TWL
+#ifdef SDK_PORT
+#include <nitro/hw/X86/ioreg_G3X.h>
+#include <nitro/hw/X86/mmap_global.h>
+#else
 #include <nitro/hw/ARM9/ioreg_G3X.h>
 #include <nitro/hw/ARM9/mmap_global.h>
+#endif
+#else
+#ifdef SDK_PORT
+#include <twl/hw/X86/ioreg_G3X.h>
+#include <twl/hw/X86/mmap_global.h>
 #else
 #include <twl/hw/ARM9/ioreg_G3X.h>
 #include <twl/hw/ARM9/mmap_global.h>
+#endif
 #endif
 
 #ifdef __cplusplus

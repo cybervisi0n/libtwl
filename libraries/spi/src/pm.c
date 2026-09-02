@@ -182,7 +182,12 @@ void PM_Init(void) {
   PMi_LCDCount = PMi_DispOffCount = OS_GetVBlankCount();
 }
 
-void PMi_CommonCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+void PMi_CommonCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+void PMi_CommonCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
 #pragma unused(tag)
 
   u16 command;

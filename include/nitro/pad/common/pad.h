@@ -59,9 +59,15 @@ extern "C" {
 static inline u16 PADi_ReadRaw(void);
 
 static inline u16 PAD_Read(void) {
+	#ifdef SDK_PORT
+    u16 keys = (u16)(((reg_PAD_KEYINPUT | *(vu16 *)HW_BUTTON_XY_BUF) ^
+                  (PAD_PLUS_KEY_MASK | PAD_BUTTON_MASK)) & (PAD_PLUS_KEY_MASK | PAD_BUTTON_MASK));
+	return keys;
+	#else
   u16 paddata = PADi_ReadRaw();
   return (u16)(paddata & ~((paddata & PAD_KEY_UP) << 1) &
                ~((paddata & PAD_KEY_LEFT) >> 1));
+  #endif
 }
 
 static inline u16 PAD_ReadNoFilter(void) { return PADi_ReadRaw(); }

@@ -62,8 +62,10 @@ typedef struct CARDiCommandArg {
 SDK_COMPILER_ASSERT(sizeof(CARDiCommandArg) % 32 == 0);
 
 SDK_INLINE void CARDi_SendPxi(u32 data) {
+#ifdef SDK_BUILD_ARM
   while (PXI_SendWordByFifo(PXI_FIFO_TAG_FS, data, TRUE) < 0) {
   }
+#endif
 }
 
 #if defined(SDK_ARM7)
@@ -73,7 +75,11 @@ void CARDi_LockMutexForARM7(void);
 void CARDi_UnlockMutexForARM7(void);
 #endif // if defined(SDK_ARM7)
 
+#ifdef SDK_PORT
+void CARDi_OnFifoRecv(PXIFifoTag tag, u64 data, BOOL err);
+#else
 void CARDi_OnFifoRecv(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 
 #ifdef __cplusplus
 } // extern "C"

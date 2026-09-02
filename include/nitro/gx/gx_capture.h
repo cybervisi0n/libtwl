@@ -3,9 +3,17 @@
 
 #include <nitro/gx/gxcommon.h>
 #ifndef SDK_TWL
+#ifdef SDK_PORT
+#include <nitro/hw/X86/ioreg_GX.h>
+#else
 #include <nitro/hw/ARM9/ioreg_GX.h>
+#endif
+#else
+#ifdef SDK_PORT
+#include <twl/hw/X86/ioreg_GX.h>
 #else
 #include <twl/hw/ARM9/ioreg_GX.h>
+#endif
 #endif
 
 #ifdef __cplusplus

@@ -53,7 +53,11 @@ typedef struct RTCWork {
 static u16 rtcInitialized; // Initialized verify flag
 static RTCWork rtcWork;    // Structure that combines work variables
 
+#ifdef SDK_PORT
+static void RtcCommonCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void RtcCommonCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 static u32 RtcBCD2HEX(u32 bcd);
 static u32 RtcHEX2BCD(u32 hex);
 static BOOL RtcCheckAlarmParam(const RTCAlarmParam *param);
@@ -654,7 +658,12 @@ RTCResult RTCi_SetFout(const u16 *fout) {
 }
 #endif
 
-static void RtcCommonCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+static void RtcCommonCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+static void RtcCommonCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
 #pragma unused(tag)
 
   RTCResult result;

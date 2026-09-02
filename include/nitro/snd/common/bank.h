@@ -39,6 +39,25 @@ typedef struct SNDWaveArcLink {
   struct SNDWaveArcLink *next;
 } SNDWaveArcLink;
 
+#ifdef SDK_PORT
+typedef struct WIN_SNDWaveArcLink
+{
+    u32 waveArc;
+    u32 next;
+} WIN_SNDWaveArcLink;
+#endif
+
+#ifdef SDK_PORT
+typedef struct SNDWaveArc
+{
+	struct SNDBinaryFileHeader fileHeader;
+	struct SNDBinaryBlockHeader blockHeader;
+	struct SNDWaveArcLink * topLink;
+    u32 reserved[6];
+    u32 waveCount;
+    u32 waveOffset[0];
+} SNDWaveArc;
+#else
 typedef struct SNDWaveArc {
   struct SNDBinaryFileHeader fileHeader;
   struct SNDBinaryBlockHeader blockHeader;
@@ -48,6 +67,7 @@ typedef struct SNDWaveArc {
   u32 waveCount;
   u32 waveOffset[0];
 } SNDWaveArc;
+#endif
 
 typedef struct SNDWaveData {
   struct SNDWaveParam param;
@@ -62,6 +82,17 @@ typedef struct SNDBankData {
   u32 instCount;
   u32 instOffset[0];
 } SNDBankData;
+
+#ifdef SDK_PORT
+typedef struct WIN_SNDBankData
+{
+    struct SNDBinaryFileHeader fileHeader;
+    struct SNDBinaryBlockHeader blockHeader;
+    struct WIN_SNDWaveArcLink waveArcLink[SND_BANK_TO_WAVEARC_MAX];
+    u32 instCount;
+    u32 instOffset[0];
+} WIN_SNDBankData;
+#endif
 
 typedef struct SNDInstParam {
   u16 wave[2];

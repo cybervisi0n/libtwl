@@ -202,8 +202,11 @@ static inline void MI_CpuFillFast(void *dest, u32 data, u32 size) {
   SDK_TASSERTMSG((size & 3) == 0, "size & 3 must be 0");
   SDK_TASSERTMSG(((u32)dest & 3) == 0,
                  "source address must be in 4-byte alignment");
-
+  #ifdef SDK_PORT
+  memset( dest, data, size );
+  #else
   MIi_CpuClearFast(data, dest, size);
+  #endif
 }
 
 static inline void MI_CpuCopyFast(const void *src, void *dest, u32 size) {

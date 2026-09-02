@@ -50,7 +50,11 @@ static OSMessageQueue sCommandMesgQueue;
 
 #endif /* SDK_ARM9 */
 
+#ifdef SDK_PORT
+static void PxiFifoCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void PxiFifoCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 static void InitPXI(void);
 
 #if defined(SDK_ARM9) || defined(SDK_PORT)
@@ -628,7 +632,12 @@ void SND_CommandProc(void) {
 
 #endif /* SDK_ARM9 */
 
-static void PxiFifoCallback(PXIFifoTag tag, u32 data, BOOL /*err */) {
+#ifdef SDK_PORT
+static void PxiFifoCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+static void PxiFifoCallback(PXIFifoTag tag, u32 data, BOOL /*err */)
+#endif
+{
   OSIntrMode enabled;
   BOOL result;
 

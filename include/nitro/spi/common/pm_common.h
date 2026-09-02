@@ -12,7 +12,11 @@ extern "C" {
 #ifdef SDK_ARM9
 #include <nitro/hw/ARM9/ioreg_PAD.h>
 #else // SDK_ARM9
+#ifdef SDK_PORT
+#include <nitro/hw/X86/ioreg_PAD.h>
+#else
 #include <nitro/hw/ARM7/ioreg_PAD.h>
+#endif
 #endif // SDK_ARM9
 
 #else
@@ -20,7 +24,11 @@ extern "C" {
 #include <twl/misc.h>
 #include <twl/types.h>
 #if defined(SDK_ARM9) || defined(SDK_PORT)
+#ifdef SDK_PORT
+#include <twl/hw/X86/ioreg_PAD.h>
+#else
 #include <twl/hw/ARM9/ioreg_PAD.h>
+#endif
 #else // SDK_ARM9
 #include <twl/hw/ARM7/ioreg_PAD.h>
 #endif // SDK_ARM9

@@ -3,12 +3,22 @@
 
 #include <nitro/gx/gxcommon.h>
 #ifndef SDK_TWL
+#ifdef SDK_PORT
+#include <nitro/hw/X86/ioreg_GX.h>
+#include <nitro/hw/X86/ioreg_GXS.h>
+#else
 #include <nitro/hw/ARM9/ioreg_GX.h>
 #include <nitro/hw/ARM9/ioreg_GXS.h>
+#endif
 #include <nitro/hw/common/mmap_shared.h>
+#else
+#ifdef SDK_PORT
+#include <twl/hw/X86/ioreg_GX.h>
+#include <twl/hw/X86/ioreg_GXS.h>
 #else
 #include <twl/hw/ARM9/ioreg_GX.h>
 #include <twl/hw/ARM9/ioreg_GXS.h>
+#endif
 #include <twl/hw/common/mmap_shared.h>
 #endif
 

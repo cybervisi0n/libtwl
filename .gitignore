@@ -1,2 +1,4 @@
 .cache/
 msys2/
+build/
+builddir/

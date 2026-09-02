@@ -7,6 +7,7 @@
 #ifdef SDK_PORT
 #include "simulator/sim.h"
 #include <simulator/queue.h>
+#include <stdlib.h>
 extern SIM_queue_t * pxiQueuePtr;
 extern SIM_queue_t * pxi7to9QueuePtr;
 #endif
@@ -148,7 +149,18 @@ int PXI_SendWordByFifo(int fifotag, u32 data, BOOL err)
   fifomsg.e.err = (u32)err;
   fifomsg.e.data = data;
 
+  #ifdef SDK_PORT
+    WIN_PXIFifoMessage * fifoMsgPtr;
+    fifoMsgPtr = malloc( sizeof( WIN_PXIFifoMessage ) );
+    fifoMsgPtr->e.tag = (PXIFifoTag)fifotag;
+    fifoMsgPtr->e.err = (u32)err;
+    fifoMsgPtr->e.data = data;
+    SIM_queue_write( pxiQueuePtr, (void *)fifoMsgPtr );
+    SIM_PostPxiThread();
+    return PXI_FIFO_SUCCESS;
+  #else
   return PXIi_SetToFifo(fifomsg.raw);
+  #endif
 }
 
 #ifdef SDK_PORT

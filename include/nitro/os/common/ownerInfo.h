@@ -9,7 +9,11 @@ extern "C" {
 #include <nitro/spec.h>
 #include <nitro/spi/common/config.h>
 #ifndef SDK_TWL
+#ifdef SDK_PORT
+#include <nitro/hw/X86/mmap_shared.h>
+#else
 #include <nitro/hw/common/mmap_shared.h>
+#endif
 #else
 #include <twl/hw/common/mmap_shared.h>
 #endif

@@ -22,7 +22,11 @@ extern "C" {
 extern PMExitCallbackInfo hwResetCbInfo;
 #endif
 
+#ifdef SDK_PORT
+void NWMi_ReceiveFifo9(PXIFifoTag tag, u64 fifo_buf_adr, BOOL err);
+#else
 void NWMi_ReceiveFifo9(PXIFifoTag tag, u32 fifo_buf_adr, BOOL err);
+#endif
 void NWMi_SetCallbackTable(NWMApiid id, NWMCallbackFunc callback);
 void NWMi_SetReceiveCallbackTable(NWMFramePort port, NWMCallbackFunc callback);
 NWMRetCode NWMi_SendCommand(NWMApiid id, u16 paramNum, ...);

@@ -8,14 +8,12 @@ extern "C" {
 #ifndef SDK_TWL
 
 #ifdef SDK_PORT
-#ifdef SDK_PORT
 #include <nitro/hw/X86/mmap_global.h>
 #include <nitro/hw/X86/mmap_main.h>
 #include <nitro/hw/X86/mmap_tcm.h>
 #include <nitro/hw/X86/mmap_vram.h>
 #include <nitro/hw/X86/mmap_shared.h>
 #include <nitro/hw/X86/ioreg.h>
-#endif
 #else
 #ifdef SDK_ARM9
 #include <nitro/hw/ARM9/mmap_global.h>

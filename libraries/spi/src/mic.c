@@ -29,7 +29,11 @@ typedef struct MICWork {
 static u16 micInitialized; // Initialized verify flag
 static MICWork micWork;    // Structure that combines work variables
 
+#ifdef SDK_PORT
+static void MicCommonCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void MicCommonCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 static BOOL MicDoSampling(u16 type);
 static BOOL MicStartAutoSampling(void *buf, u32 size, u32 span, u8 flags);
 static BOOL MicStopAutoSampling(void);
@@ -311,7 +315,12 @@ MICResult MIC_AdjustLimitedSampling(u32 rate) {
 }
 #endif
 
-static void MicCommonCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+static void MicCommonCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+static void MicCommonCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
 #pragma unused(tag)
 
   u16 command;

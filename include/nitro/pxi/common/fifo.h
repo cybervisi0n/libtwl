@@ -81,7 +81,11 @@ typedef struct {
 } WIN_PXIFifoMessage;
 #endif
 
+#ifdef SDK_PORT
+typedef void (*PXIFifoCallback) (PXIFifoTag tag, u64 data, BOOL err);
+#else
 typedef void (*PXIFifoCallback)(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 typedef void (*PXIFifoEmtpyCallback)(void);
 
 static inline BOOL PXI_IsFifoError(PXIFifoStatus status) {

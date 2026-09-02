@@ -144,7 +144,11 @@ static CAMERAWork cameraWork;
 
 static BOOL CameraSendPxiCommand(CAMERAPxiCommand command, u8 size, u8 data);
 static void CameraSendPxiData(u8 *pData);
+#ifdef SDK_PORT
+static void CameraPxiCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void CameraPxiCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 static void CameraSyncCallback(CAMERAResult result, void *arg);
 static void CameraCallCallbackAndUnlock(CAMERAResult result);
 static void CameraWaitBusy(void);
@@ -1846,7 +1850,12 @@ static void CameraSendPxiData(u8 *pData) {
   }
 }
 
-static void CameraPxiCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+static void CameraPxiCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+static void CameraPxiCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
 #pragma unused(tag)
   CAMERAResult result;
 

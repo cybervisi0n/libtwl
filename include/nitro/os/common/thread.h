@@ -6,6 +6,10 @@
 #include <nitro/os/common/callTrace.h>
 #include <nitro/version.h>
 
+#ifdef SDK_PORT
+#include <SDL2/SDL_thread.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -108,9 +112,21 @@ struct _OSThread {
   OSMutexQueue mutexQueue; // OSMutexQueue
 #endif
 
+#ifdef SDK_PORT
+    u64 stackTop;
+    u64 stackBottom;
+    u64 stackWarningOffset;
+    SDL_Thread * win_sdlThread;
+    u8 win_threadState;
+    u32 threadListIdx;
+    char funcName[64];
+    char filename[64];
+    u32 lineno;
+#else
   u32 stackTop;    // for stack overflow
   u32 stackBottom; // for stack underflow
   u32 stackWarningOffset;
+#endif
 
 #ifndef SDK_THREAD_INFINITY
   OSThreadQueue joinQueue; // for wakeup threads in thread termination
@@ -191,8 +207,16 @@ void OS_InitThread(void);
 
 BOOL OS_IsThreadAvailable(void);
 
+#ifdef SDK_PORT
+void    OS_CreateThreadDebug(OSThread *thread,
+                        void (*func) (void *), void *arg, void *stack, u32 stackSize, u32 prio, const char * name, const char* filename, u32 line_num);
+void    OS_CreateThreadReal(OSThread *thread,
+                        void (*func) (void *), void *arg, void *stack, u32 stackSize, u32 prio);
+#define OS_CreateThread(_thread,_func,_arg,_stack,_stackSize,_prio) OS_CreateThreadDebug(_thread,_func,_arg,_stack,_stackSize,_prio,#_func,__FILE__,__LINE__)
+#else
 void OS_CreateThread(OSThread *thread, void (*func)(void *), void *arg,
                      void *stack, u32 stackSize, u32 prio);
+#endif
 
 void OS_ExitThread(void);
 
@@ -226,6 +250,10 @@ void OS_WakeupThreadDirect(OSThread *thread);
 void OS_DumpThreadList(void);
 
 int OS_GetNumberOfThread(void);
+
+#ifdef SDK_PORT
+OSThread * WIN_OS_GetCurrentThread(void);
+#endif
 
 extern OSThreadInfo OSi_ThreadInfo;
 
@@ -276,7 +304,11 @@ static inline void OS_InitThreadQueue(OSThreadQueue *queue) {
 }
 
 static inline OSThread *OS_GetCurrentThread(void) {
+#ifdef SDK_PORT
+    return WIN_OS_GetCurrentThread();
+#else
   return OS_GetThreadInfo()->current;
+#endif
 }
 
 static inline void OS_SetCurrentThread(OSThread *thread) {
@@ -330,7 +362,11 @@ void OS_SetThreadDestructorStack(void *stack);
 
 extern OSMutex *OSi_RemoveMutexLinkFromQueue(OSMutexQueue *queue);
 
+#ifdef SDK_PORT
+void OSi_SetSystemErrno(OSThread *thread, int myErrno);
+#else
 void OSi_SetSystemErrno(OSThread *thread, int errno);
+#endif
 
 int OSi_GetSystemErrno(const OSThread *thread);
 

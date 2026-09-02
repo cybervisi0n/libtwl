@@ -8,6 +8,10 @@
 #include "../include/card_task.h"
 #include "../include/card_command.h"
 
+#if defined( SDK_PORT )
+#define ATTRIBUTE_ALIGN(x) __attribute__((aligned(x)))
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,7 +60,7 @@ typedef struct CARDiCommon {
 
   u32 priority;
 
-#if defined(SDK_ARM9)
+#if defined(SDK_ARM9) || defined(SDK_PORT)
 
   u32 flush_threshold_ic;
   u32 flush_threshold_dc;

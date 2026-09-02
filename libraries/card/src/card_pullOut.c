@@ -8,7 +8,11 @@ static CARDPulledOutCallback CARD_UserCallback;
 static u32 CARDiSlotResetCount;
 static BOOL CARDi_IsPulledOutFlag = FALSE;
 
+#ifdef SDK_PORT
+static void CARDi_PulledOutCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void CARDi_PulledOutCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 static void CARDi_SendtoPxi(u32 data, u32 wait);
 
 void CARD_InitPulledOutCallback(void) {
@@ -22,7 +26,12 @@ void CARD_InitPulledOutCallback(void) {
   CARD_UserCallback = NULL;
 }
 
-static void CARDi_PulledOutCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+static void CARDi_PulledOutCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+static void CARDi_PulledOutCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
 #pragma unused(tag, err)
 
   u32 command = data & CARD_PXI_COMMAND_MASK;

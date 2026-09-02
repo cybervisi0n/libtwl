@@ -12,29 +12,13 @@ SDK_DEFINE_MIDDLEWARE(cardi_backup_assert, "NINTENDO", "BACKUP");
 #include <nitro/version_end.h>
 #define SDK_USING_BACKUP() SDK_USING_MIDDLEWARE(cardi_backup_assert)
 
-
-
-
-
-
 static u8 CARDi_backup_cache_page_buf[256] ATTRIBUTE_ALIGN(32);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#ifdef SDK_PORT
+void CARDi_OnFifoRecv(PXIFifoTag tag, u64 data, BOOL err)
+#else
 void CARDi_OnFifoRecv(PXIFifoTag tag, u32 data, BOOL err)
+#endif
 {
 #pragma unused(data)
   if ((tag == PXI_FIFO_TAG_FS) && err) {
@@ -45,20 +29,6 @@ void CARDi_OnFifoRecv(PXIFifoTag tag, u32 data, BOOL err)
     OS_WakeupThreadDirect(p->current_thread_9);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 static BOOL CARDi_Request(CARDiCommon *p, int req_type, int retry_count)
 {
@@ -99,16 +69,6 @@ static BOOL CARDi_Request(CARDiCommon *p, int req_type, int retry_count)
 
   return (p->cmd->result == CARD_RESULT_SUCCESS);
 }
-
-
-
-
-
-
-
-
-
-
 
 static void CARDi_RequestStreamCommandCore(CARDiCommon * p)
 {
@@ -174,16 +134,6 @@ static void CARDi_RequestStreamCommandCore(CARDiCommon * p)
   } while (p->len > 0);
 }
 
-
-
-
-
-
-
-
-
-
-
 static void CARDi_RequestWriteSectorCommandCore(CARDiCommon * p)
 {
   const u32 sector_size = CARD_GetBackupSectorSize();
@@ -240,16 +190,6 @@ static void CARDi_RequestWriteSectorCommandCore(CARDiCommon * p)
   }
 }
 
-
-
-
-
-
-
-
-
-
-
 static void CARDi_AccessStatusCore(CARDiCommon *p)
 {
   CARDRequest command = (CARDRequest)CARDi_backup_cache_page_buf[1];
@@ -259,15 +199,6 @@ static void CARDi_AccessStatusCore(CARDiCommon *p)
   (void)CARDi_Request(p, command, 1);
   DC_InvalidateRange(CARDi_backup_cache_page_buf, 1);
 }
-
-
-
-
-
-
-
-
-
 
 static void CARDi_IdentifyBackupCore2(CARDBackupType type)
 {
@@ -420,16 +351,6 @@ static void CARDi_IdentifyBackupCore2(CARDBackupType type)
   }
 }
 
-
-
-
-
-
-
-
-
-
-
 static void CARDi_IdentifyBackupCore(CARDiCommon * p)
 {
   (void)CARDi_Request(p, CARD_REQ_IDENTIFY, 1);
@@ -439,17 +360,6 @@ static void CARDi_IdentifyBackupCore(CARDiCommon * p)
   p->cmd->len = 1;
   (void)CARDi_Request(p, CARD_REQ_READ_BACKUP, 1);
 }
-
-
-
-
-
-
-
-
-
-
-
 
 static void CARDi_BeginBackupCommand(CARDAccessLevel level, MIDmaCallback callback, void *arg)
 {
@@ -465,23 +375,6 @@ static void CARDi_BeginBackupCommand(CARDAccessLevel level, MIDmaCallback callba
   }
   (void)CARDi_WaitForTask(&cardi_common, TRUE, callback, arg);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 BOOL CARDi_RequestStreamCommand(u32 src, u32 dst, u32 len,
                                 MIDmaCallback callback, void *arg, BOOL is_async,
@@ -507,16 +400,6 @@ BOOL CARDi_RequestStreamCommand(u32 src, u32 dst, u32 len,
   return CARDi_ExecuteOldTypeTask(CARDi_RequestStreamCommandCore, is_async);
 }
 
-
-
-
-
-
-
-
-
-
-
 int CARDi_AccessStatus(CARDRequest command, u8 value)
 {
   SDK_ASSERT(CARD_GetCurrentBackupType() != CARD_BACKUP_TYPE_NOT_USE);
@@ -530,21 +413,6 @@ int CARDi_AccessStatus(CARDRequest command, u8 value)
              ? CARDi_backup_cache_page_buf[0]
              : -1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 BOOL CARDi_RequestWriteSectorCommand(u32 src, u32 dst, u32 len, BOOL verify,
                                      MIDmaCallback callback, void *arg, BOOL is_async)
@@ -566,15 +434,6 @@ BOOL CARDi_RequestWriteSectorCommand(u32 src, u32 dst, u32 len, BOOL verify,
                                   is_async);
 }
 
-
-
-
-
-
-
-
-
-
 BOOL CARD_IdentifyBackup(CARDBackupType type)
 {
   if (type == CARD_BACKUP_TYPE_NOT_USE) {
@@ -588,30 +447,12 @@ BOOL CARD_IdentifyBackup(CARDBackupType type)
   return CARDi_ExecuteOldTypeTask(CARDi_IdentifyBackupCore, FALSE);
 }
 
-
-
-
-
-
-
-
-
-
 CARDBackupType CARD_GetCurrentBackupType(void)
 {
   SDK_ASSERT(CARD_IsAvailable());
 
   return cardi_common.cmd->type;
 }
-
-
-
-
-
-
-
-
-
 
 u32 CARD_GetBackupTotalSize(void)
 {
@@ -620,30 +461,12 @@ u32 CARD_GetBackupTotalSize(void)
   return cardi_common.cmd->spec.total_size;
 }
 
-
-
-
-
-
-
-
-
-
 u32 CARD_GetBackupSectorSize(void)
 {
   SDK_ASSERT(CARD_IsAvailable());
 
   return cardi_common.cmd->spec.sect_size;
 }
-
-
-
-
-
-
-
-
-
 
 u32 CARD_GetBackupPageSize(void)
 {
@@ -652,43 +475,15 @@ u32 CARD_GetBackupPageSize(void)
   return cardi_common.cmd->spec.page_size;
 }
 
-
-
-
-
-
-
-
-
-
-
 BOOL CARD_WaitBackupAsync(void)
 {
   return CARDi_WaitAsync();
 }
 
-
-
-
-
-
-
-
-
-
 BOOL CARD_TryWaitBackupAsync(void)
 {
   return CARDi_TryWaitAsync();
 }
-
-
-
-
-
-
-
-
-
 
 void CARD_CancelBackupAsync(void)
 {

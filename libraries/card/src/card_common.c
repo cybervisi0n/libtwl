@@ -97,7 +97,7 @@ void CARDi_InitResourceLock(void) {
 void CARDi_InitCommand(void) {
   CARDiCommon *p = &cardi_common;
 
-#if defined(SDK_ARM9)
+#if defined(SDK_ARM9) || defined(SDK_PORT)
   p->cmd = &cardi_arg;
   MI_CpuFillFast(&cardi_arg, 0x00, sizeof(cardi_arg));
   DC_FlushRange(&cardi_arg, sizeof(cardi_arg));

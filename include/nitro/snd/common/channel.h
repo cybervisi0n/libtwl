@@ -7,12 +7,24 @@
 #include <nitro/misc.h>
 #include <nitro/hw/common/armArch.h> // for HW_CPU_CLOCK_ARM7
 
-#ifdef SDK_ARM7
+#if defined(SDK_ARM7) || defined(SDK_PORT)
+#ifdef SDK_PORT
+#include <nitro/hw/X86/ioreg_SND.h>
+#else
 #include <nitro/hw/ARM7/ioreg_SND.h>
+#endif
 #ifndef SDK_TWL
+#ifdef SDK_PORT
+#include <nitro/hw/X86/mmap_global.h>
+#else
 #include <nitro/hw/ARM7/mmap_global.h>
+#endif
 #else // SDK_TWL
+#ifdef SDK_PORT
+#include <twl/hw/X86/mmap_global.h>
+#else
 #include <twl/hw/ARM7/mmap_global.h>
+#endif
 #endif
 #endif /* SDK_ARM7 */
 

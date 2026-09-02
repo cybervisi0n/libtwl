@@ -5,7 +5,11 @@
 #include <nitro/gx/gx_vramcnt.h>
 #include <nitro/wm.h>
 
+#ifdef SDK_PORT
+static void WvrReceiveCallback(PXIFifoTag tag, u64 data, BOOL err);
+#else
 static void WvrReceiveCallback(PXIFifoTag tag, u32 data, BOOL err);
+#endif
 static void WvrDummyAsyncCallback(void *arg, WVRResult result);
 
 static WVRCallbackFunc wvrCallback = NULL;
@@ -153,7 +157,12 @@ WVRResult WVR_TerminateAsync(WVRCallbackFunc callback, void *arg) {
   return WVR_RESULT_OPERATING;
 }
 
-static void WvrReceiveCallback(PXIFifoTag tag, u32 data, BOOL err) {
+#ifdef SDK_PORT
+static void WvrReceiveCallback(PXIFifoTag tag, u64 data, BOOL err)
+#else
+static void WvrReceiveCallback(PXIFifoTag tag, u32 data, BOOL err)
+#endif
+{
 #pragma unused(tag, err)
 
   WVRCallbackFunc cb = wvrCallback;

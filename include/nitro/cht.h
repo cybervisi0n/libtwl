@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#ifdef SDK_ARM9
+#if defined(SDK_ARM9) || defined (SDK_PORT)
 
 #include <nitro/cht/ARM9/pictocatch.h>
 
