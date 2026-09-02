@@ -1052,7 +1052,7 @@ void *SIM_RenderInit(void *arg) {
     windowWidth = s_SIM_config.windowWidth;
   }
 
-  std::string windowTitle = "libntr Application";
+  std::string windowTitle = "libtwl Application";
 
   CARDRomHeader *cardHeader = (CARDRomHeader *)(HW_ROM_HEADER_BUF);
 
