@@ -5,7 +5,7 @@
 #include <nitro/fx/fx_cp.h>
 #include <nitro/mi/memory.h>
 
-inline fx32 mul64(fx64 x, fx32 y) { return (fx32)((x * y) >> FX32_SHIFT); }
+static inline fx32 mul64(fx64 x, fx32 y) { return (fx32)((x * y) >> FX32_SHIFT); }
 
 #ifdef SDK_PORT
 void MTX_Identity44_(MtxFx44 *pDst) {

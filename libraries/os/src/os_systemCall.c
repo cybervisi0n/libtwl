@@ -9,6 +9,8 @@ void SVC_CpuSetFast(const void *srcp, void *destp, u32 dmaCntData) {
   // TODO: stubbed
 }
 
+u16 SVC_GetCRC16(u32 start, const void *datap, u32 size) { return 0; }
+
 #endif
 
 #ifdef SDK_ARM9

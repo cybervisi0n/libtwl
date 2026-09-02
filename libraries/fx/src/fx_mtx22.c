@@ -5,7 +5,7 @@
 #include <string.h>
 #endif
 
-inline fx32 mul64(fx64 x, fx32 y) { return (fx32)((x * y) >> FX32_SHIFT); }
+static inline fx32 mul64(fx64 x, fx32 y) { return (fx32)((x * y) >> FX32_SHIFT); }
 
 #ifdef SDK_PORT
 void MTX_Identity22_(MtxFx22 *pDst) {

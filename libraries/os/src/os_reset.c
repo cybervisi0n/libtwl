@@ -18,6 +18,10 @@ static void OSi_ReadCardRom32(u32 src, void *dst, int len);
 extern u32 OSi_GetOriginalExceptionHandler(void);
 #endif // ifdef SDK_ARM9
 
+#ifdef SDK_PORT
+static void OSi_ReloadRomData(BOOL ontwl){}
+#endif
+
 void OSi_DoResetSystem(void);
 static void OSi_DoBoot(void);
 

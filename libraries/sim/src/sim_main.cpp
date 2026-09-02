@@ -1,4 +1,5 @@
-extern "C" void NitroMain();
+#include "twl/hw/X86/mmap_global.h"
+extern "C" void TwlMain();
 extern "C" int NitroSpMain(void *arg);
 #define SDL_MAIN_HANDLED
 #define _POSIX_C_SOURCE 199309L
@@ -2239,6 +2240,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  NitroMain();
+  TwlMain();
   return 0;
 }
