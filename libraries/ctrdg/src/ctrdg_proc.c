@@ -49,8 +49,10 @@ SDK_WEAK_SYMBOL void CTRDG_Init(void) {
 #ifndef SDK_SMALL_BUILD
 
   PXI_Init();
+  #ifndef SDK_PORT
   while (!PXI_IsCallbackReady(PXI_FIFO_TAG_CTRDG, PXI_PROC_ARM7)) {
   }
+  #endif
   PXI_SetFifoRecvCallback(PXI_FIFO_TAG_CTRDG, CTRDGi_CallbackForInitModuleInfo);
 
   CTRDGi_InitModuleInfo();

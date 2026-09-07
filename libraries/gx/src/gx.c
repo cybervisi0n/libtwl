@@ -48,29 +48,59 @@ void GX_Init() {
   if (GXi_DmaId != GX_DMA_NOT_USE) {
 #ifdef SDK_TWL
     if (GXi_DmaId > 3) {
+      #ifdef SDK_PORT
+		  MI_NDmaFill(GXi_DmaId, (void *)REG_BG0CNT_ADDR, 0,
+		             REG_DISP_MMEM_FIFO_OFFSET - REG_BG0CNT_OFFSET);
+      #else
       MI_NDmaFill(GXi_DmaId - 4, (void *)REG_BG0CNT_ADDR, 0,
                   REG_DISP_MMEM_FIFO_ADDR - REG_BG0CNT_ADDR);
+      #endif
       reg_GX_MASTER_BRIGHT = 0;
 
+      #ifdef SDK_PORT
+      MI_NDmaFill(GXi_DmaId - 4, (void *)REG_DB_DISPCNT_ADDR, 0,
+                  REG_DB_MASTER_BRIGHT_OFFSET - REG_DB_DISPCNT_OFFSET + 4);
+      #else
       MI_NDmaFill(GXi_DmaId - 4, (void *)REG_DB_DISPCNT_ADDR, 0,
                   REG_DB_MASTER_BRIGHT_ADDR - REG_DB_DISPCNT_ADDR + 4);
+      #endif
     } else
 #endif
     {
+      #ifdef SDK_PORT
+      MI_DmaFill32(GXi_DmaId, (void *)REG_BG0CNT_ADDR, 0,
+                   REG_DISP_MMEM_FIFO_OFFSET - REG_BG0CNT_OFFSET);
+      #else
       MI_DmaFill32(GXi_DmaId, (void *)REG_BG0CNT_ADDR, 0,
                    REG_DISP_MMEM_FIFO_ADDR - REG_BG0CNT_ADDR);
+      #endif
       reg_GX_MASTER_BRIGHT = 0;
 
+      #ifdef SDK_PORT
+      MI_DmaFill32(GXi_DmaId, (void *)REG_DB_DISPCNT_ADDR, 0,
+                   REG_DB_MASTER_BRIGHT_OFFSET - REG_DB_DISPCNT_OFFSET + 4);
+      #else
       MI_DmaFill32(GXi_DmaId, (void *)REG_DB_DISPCNT_ADDR, 0,
                    REG_DB_MASTER_BRIGHT_ADDR - REG_DB_DISPCNT_ADDR + 4);
+      #endif
     }
   } else {
+    #ifdef SDK_PORT
+    MI_CpuFill32((void *)REG_BG0CNT_ADDR, 0,
+                 REG_DISP_MMEM_FIFO_OFFSET - REG_BG0CNT_OFFSET);
+    #else
     MI_CpuFill32((void *)REG_BG0CNT_ADDR, 0,
                  REG_DISP_MMEM_FIFO_ADDR - REG_BG0CNT_ADDR);
+    #endif
     reg_GX_MASTER_BRIGHT = 0;
 
+    #ifdef SDK_PORT
+    MI_CpuFill32((void *)REG_DB_DISPCNT_ADDR, 0,
+                 REG_DB_MASTER_BRIGHT_OFFSET - REG_DB_DISPCNT_OFFSET + 4);
+    #else
     MI_CpuFill32((void *)REG_DB_DISPCNT_ADDR, 0,
                  REG_DB_MASTER_BRIGHT_ADDR - REG_DB_DISPCNT_ADDR + 4);
+    #endif
   }
 
   reg_G2_BG2PA = bg_mtx_elem_one;

@@ -286,8 +286,10 @@ extern unsigned long SDK_IRQ_STACKSIZE[];
 static u32 OSi_IrqStackWarningOffset = 0;
 
 void OS_SetIrqStackChecker(void) {
+  #ifndef SDK_PORT
   *(u32 *)(OSi_IRQ_STACK_BOTTOM - sizeof(u32)) = OSi_IRQ_STACK_CHECKNUM_BOTTOM;
   *(u32 *)(OSi_IRQ_STACK_TOP) = OSi_IRQ_STACK_CHECKNUM_TOP;
+  #endif
 }
 
 void OS_SetIrqStackWarningOffset(u32 offset) {

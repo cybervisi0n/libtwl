@@ -84,6 +84,11 @@ void PXI_InitFifo(void) {
         for (timeout = 1000; (reg_PXI_INTF & 15) == c; timeout--) {
           if (timeout == 0) {
             i = 0;
+
+            #ifdef SDK_PORT
+            (void)OS_RestoreInterrupts(enabled);
+            return;
+            #endif
             break;
           }
         }

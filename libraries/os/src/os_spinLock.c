@@ -202,7 +202,8 @@ void OS_InitLock(void) {
   }
 #endif
 
-#else // SDK_ARM7
+#endif
+#ifdef SDK_ARM7 // SDK_ARM7
 
   ((u32 *)OSi_ANYP_LOCK_ID_FLAG)[0] = OSi_LOCKID_INITIAL_FLAG_0;
   ((u32 *)OSi_ANYP_LOCK_ID_FLAG)[1] = OSi_LOCKID_INITIAL_FLAG_1;

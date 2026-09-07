@@ -40,6 +40,10 @@ OSThreadQueue OSi_IrqThreadQueue = {NULL, NULL};
 #endif
 
 #ifdef SDK_PORT
+#include <simulator/sim.h>
+#endif
+
+#ifdef SDK_PORT
 void OS_IrqHandler(void) {}
 void OS_IrqHandler_ThreadSwitch(void) {}
 #else
@@ -301,6 +305,16 @@ void OS_WaitIrq(BOOL clear, OSIrqMask irqFlags) {
   if (clear) {
     (void)OS_ClearIrqCheckFlag(irqFlags);
   }
+
+  #ifdef SDK_PORT
+  if( irqFlags == 1 )
+  {
+      SIM_PreRenderVBlank();
+      SIM_Render(NULL);
+      SIM_PostRenderVBlank();
+      return;
+  }
+  #endif
 
   while (!(OS_GetIrqCheckFlag() & irqFlags)) {
     OS_SleepThread(&OSi_IrqThreadQueue);

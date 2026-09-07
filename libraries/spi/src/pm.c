@@ -173,9 +173,11 @@ void PM_Init(void) {
 #endif
 
   PXI_Init();
+  #ifndef SDK_PORT
   while (!PXI_IsCallbackReady(PXI_FIFO_TAG_PM, PXI_PROC_ARM7)) {
     SVC_WaitByLoop(100);
   }
+  #endif
 
   PXI_SetFifoRecvCallback(PXI_FIFO_TAG_PM, PMi_CommonCallback);
 

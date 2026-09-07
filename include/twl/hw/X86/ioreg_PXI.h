@@ -3,27 +3,32 @@
 
 #ifndef SDK_ASM
 #include <nitro/types.h>
-#include <twl/hw/ARM9/mmap_global.h>
+#include <twl/hw/X86/mmap_global.h>
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+extern REGType16v s_reg_PXI_SUBPINTF;
+extern REGType16v s_reg_PXI_SUBP_FIFO_CNT;
+extern REGType32v s_reg_PXI_SEND_FIFO;
+extern REGType32v s_reg_PXI_RECV_FIFO;
+
 #define REG_SUBPINTF_OFFSET 0x180
-#define REG_SUBPINTF_ADDR (HW_REG_BASE + REG_SUBPINTF_OFFSET)
+#define REG_SUBPINTF_ADDR (&s_reg_PXI_SUBPINTF)
 #define reg_PXI_SUBPINTF (*(REGType16v *)REG_SUBPINTF_ADDR)
 
 #define REG_SUBP_FIFO_CNT_OFFSET 0x184
-#define REG_SUBP_FIFO_CNT_ADDR (HW_REG_BASE + REG_SUBP_FIFO_CNT_OFFSET)
+#define REG_SUBP_FIFO_CNT_ADDR (&s_reg_PXI_SUBP_FIFO_CNT)
 #define reg_PXI_SUBP_FIFO_CNT (*(REGType16v *)REG_SUBP_FIFO_CNT_ADDR)
 
 #define REG_SEND_FIFO_OFFSET 0x188
-#define REG_SEND_FIFO_ADDR (HW_REG_BASE + REG_SEND_FIFO_OFFSET)
+#define REG_SEND_FIFO_ADDR (&s_reg_PXI_SEND_FIFO)
 #define reg_PXI_SEND_FIFO (*(REGType32v *)REG_SEND_FIFO_ADDR)
 
 #define REG_RECV_FIFO_OFFSET 0x100000
-#define REG_RECV_FIFO_ADDR (HW_REG_BASE + REG_RECV_FIFO_OFFSET)
+#define REG_RECV_FIFO_ADDR (&s_reg_PXI_RECV_FIFO)
 #define reg_PXI_RECV_FIFO (*(REGType32v *)REG_RECV_FIFO_ADDR)
 
 #define REG_PXI_SUBPINTF_I_SHIFT 14

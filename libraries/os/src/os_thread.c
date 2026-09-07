@@ -462,21 +462,21 @@ void OS_InitThread(void) {
     OSi_LauncherThread.stackTop = (u64)stackLo;
     OSi_LauncherThread.stackWarningOffset = 0;
     #else
-  stackLo =
-      (OSi_SYS_STACKSIZE <= 0)
-          ? (void *)((u32)OSi_LAUNCHER_STACK_LO_DEFAULT - OSi_SYS_STACKSIZE)
-          : (void *)((u32)OSi_LAUNCHER_STACK_HI_MAX - OSi_SYS_STACKSIZE);
-  SDK_ASSERT((u32)OSi_LAUNCHER_STACK_LO_DEFAULT <= (u32)stackLo &&
-             (u32)stackLo <= (u32)OSi_LAUNCHER_STACK_HI_MAX);
-
-  OSi_LauncherThread.stackBottom = (u32)OSi_LAUNCHER_STACK_BOTTOM;
-  OSi_LauncherThread.stackTop = (u32)stackLo;
-  OSi_LauncherThread.stackWarningOffset = 0;
-  #endif
-
-  *(u32 *)(OSi_LauncherThread.stackBottom - sizeof(u32) * 2) =
-      OSi_STACK_CHECKNUM_BOTTOM;
-  *(u32 *)OSi_LauncherThread.stackTop = OSi_STACK_CHECKNUM_TOP;
+    stackLo =
+        (OSi_SYS_STACKSIZE <= 0)
+            ? (void *)((u32)OSi_LAUNCHER_STACK_LO_DEFAULT - OSi_SYS_STACKSIZE)
+            : (void *)((u32)OSi_LAUNCHER_STACK_HI_MAX - OSi_SYS_STACKSIZE);
+    SDK_ASSERT((u32)OSi_LAUNCHER_STACK_LO_DEFAULT <= (u32)stackLo &&
+               (u32)stackLo <= (u32)OSi_LAUNCHER_STACK_HI_MAX);
+  
+    OSi_LauncherThread.stackBottom = (u32)OSi_LAUNCHER_STACK_BOTTOM;
+    OSi_LauncherThread.stackTop = (u32)stackLo;
+    OSi_LauncherThread.stackWarningOffset = 0;
+  
+    *(u32 *)(OSi_LauncherThread.stackBottom - sizeof(u32) * 2) =
+        OSi_STACK_CHECKNUM_BOTTOM;
+    *(u32 *)OSi_LauncherThread.stackTop = OSi_STACK_CHECKNUM_TOP;
+    #endif
 
   OS_InitThreadQueue(&OSi_LauncherThread.joinQueue);
 

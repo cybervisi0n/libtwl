@@ -1,7 +1,7 @@
 #include <nitro.h>
 #include "../include/mi_dma.h"
 
-#ifdef SDK_ARM9
+#if defined(SDK_ARM9) || defined(SDK_PORT)
 #include <nitro/itcm_begin.h>
 
 void MIi_DmaSetParameters(u32 dmaNo, u32 src, u32 dest, u32 ctrl, u32 mode) {
@@ -111,6 +111,10 @@ void MIi_DmaFill32(u32 dmaNo, void *dest, u32 data, u32 size, BOOL dmaEnable) {
   MIi_ASSERT_DEST_ALIGN4(dest);
   MIi_WARNING_ADDRINTCM(dest, size);
 
+  #ifdef SDK_PORT
+  memset(dest, data, size);
+  #else
+
   if (size > 0) {
     MIi_Wait_BeforeDMA(dmaCntp, dmaNo);
     if (dmaEnable) {
@@ -123,6 +127,7 @@ void MIi_DmaFill32(u32 dmaNo, void *dest, u32 data, u32 size, BOOL dmaEnable) {
     }
     MIi_Wait_AfterDMA(dmaCntp);
   }
+  #endif
 }
 
 void MIi_DmaCopy32(u32 dmaNo, const void *src, void *dest, u32 size,
@@ -137,6 +142,9 @@ void MIi_DmaCopy32(u32 dmaNo, const void *src, void *dest, u32 size,
   MIi_WARNING_ADDRINTCM(src, size);
   MIi_WARNING_ADDRINTCM(dest, size);
 
+  #ifdef SDK_PORT
+  memcpy( dest, src, size );
+  #else
   if (size > 0) {
 
     MIi_CheckDma0SourceAddress(dmaNo, (u32)src, size, MI_DMA_SRC_INC);
@@ -151,6 +159,7 @@ void MIi_DmaCopy32(u32 dmaNo, const void *src, void *dest, u32 size,
     }
     MIi_Wait_AfterDMA(dmaCntp);
   }
+  #endif
 }
 
 void MIi_DmaSend32(u32 dmaNo, const void *src, volatile void *dest, u32 size,
@@ -165,6 +174,9 @@ void MIi_DmaSend32(u32 dmaNo, const void *src, volatile void *dest, u32 size,
   MIi_WARNING_ADDRINTCM(src, size);
   MIi_WARNING_ADDRINTCM(dest, 0);
 
+  #ifdef SDK_PORT
+  memcpy(dest, src, size);
+  #else
   if (size > 0) {
 
     MIi_CheckDma0SourceAddress(dmaNo, (u32)src, size, MI_DMA_SRC_INC);
@@ -179,6 +191,7 @@ void MIi_DmaSend32(u32 dmaNo, const void *src, volatile void *dest, u32 size,
     }
     MIi_Wait_AfterDMA(dmaCntp);
   }
+  #endif
 }
 
 void MIi_DmaRecv32(u32 dmaNo, volatile const void *src, void *dest, u32 size,
@@ -246,6 +259,15 @@ void MIi_DmaFill16(u32 dmaNo, void *dest, u16 data, u32 size, BOOL dmaEnable) {
   MIi_ASSERT_DEST_ALIGN2(dest);
   MIi_WARNING_ADDRINTCM(dest, size);
 
+  #ifdef SDK_PORT
+  u16 * destPtr = dest;
+  for( int i=0; i < size / 2; i++ )
+  {
+      *destPtr = data;
+      destPtr++;
+  }
+  #else
+
   if (size > 0) {
     MIi_Wait_BeforeDMA(dmaCntp, dmaNo);
     if (dmaEnable) {
@@ -258,6 +280,7 @@ void MIi_DmaFill16(u32 dmaNo, void *dest, u16 data, u32 size, BOOL dmaEnable) {
     }
     MIi_Wait_AfterDMA(dmaCntp);
   }
+  #endif
 }
 
 void MIi_DmaCopy16(u32 dmaNo, const void *src, void *dest, u32 size,
@@ -272,6 +295,9 @@ void MIi_DmaCopy16(u32 dmaNo, const void *src, void *dest, u32 size,
   MIi_WARNING_ADDRINTCM(src, size);
   MIi_WARNING_ADDRINTCM(dest, size);
 
+  #ifdef SDK_PORT
+  memcpy( dest, src, size );
+  #else
   if (size > 0) {
 
     MIi_CheckDma0SourceAddress(dmaNo, (u32)src, size, MI_DMA_SRC_INC);
@@ -286,6 +312,7 @@ void MIi_DmaCopy16(u32 dmaNo, const void *src, void *dest, u32 size,
     }
     MIi_Wait_AfterDMA(dmaCntp);
   }
+  #endif
 }
 
 void MIi_DmaSend16(u32 dmaNo, const void *src, volatile void *dest, u32 size,
@@ -300,6 +327,9 @@ void MIi_DmaSend16(u32 dmaNo, const void *src, volatile void *dest, u32 size,
   MIi_WARNING_ADDRINTCM(src, size);
   MIi_WARNING_ADDRINTCM(dest, 0);
 
+  #ifdef SDK_PORT
+  memcpy( dest, src, size );
+  #else
   if (size > 0) {
 
     MIi_CheckDma0SourceAddress(dmaNo, (u32)src, size, MI_DMA_SRC_INC);
@@ -314,6 +344,7 @@ void MIi_DmaSend16(u32 dmaNo, const void *src, volatile void *dest, u32 size,
     }
     MIi_Wait_AfterDMA(dmaCntp);
   }
+  #endif
 }
 
 void MIi_DmaRecv16(u32 dmaNo, volatile const void *src, void *dest, u32 size,
@@ -383,6 +414,19 @@ void MIi_DmaFill32Async(u32 dmaNo, void *dest, u32 data, u32 size,
   if (size == 0) {
     MIi_CallCallback(callback, arg);
   } else {
+    #ifdef SDK_PORT
+    u32 * destPtr = dest;
+    for(int i=0; i < size / 4; i++)
+    {
+        *destPtr = data;
+        destPtr++;
+    }
+    if( callback )
+    {
+        OSi_EnterDmaCallback(dmaNo, callback, arg);
+        MIi_CallCallback(callback, arg);
+    }
+    #else
     MI_WaitDma(dmaNo);
 
     if (callback) {
@@ -404,6 +448,7 @@ void MIi_DmaFill32Async(u32 dmaNo, void *dest, u32 data, u32 size,
                              MIi_DMA_MODE_SRC32 | MIi_DMA_MODE_NOCLEAR);
       }
     }
+    #endif
   }
 }
 
@@ -422,6 +467,14 @@ void MIi_DmaCopy32Async(u32 dmaNo, const void *src, void *dest, u32 size,
   if (size == 0) {
     MIi_CallCallback(callback, arg);
   } else {
+    #ifdef SDK_PORT
+    memcpy(dest, src, size);
+    if( callback )
+    {
+        OSi_EnterDmaCallback(dmaNo, callback, arg);
+        MIi_CallCallback(callback, arg);
+    }
+    #else
     MI_WaitDma(dmaNo);
 
     if (callback) {
@@ -442,6 +495,7 @@ void MIi_DmaCopy32Async(u32 dmaNo, const void *src, void *dest, u32 size,
                              MI_CNT_SET_COPY32(size), MIi_DMA_MODE_NOCLEAR);
       }
     }
+    #endif
   }
 }
 
@@ -461,6 +515,14 @@ void MIi_DmaSend32Async(u32 dmaNo, const void *src, volatile void *dest,
   if (size == 0) {
     MIi_CallCallback(callback, arg);
   } else {
+    #ifdef SDK_PORT
+    memcpy( src, dest, size );
+    if( callback )
+    {
+        OSi_EnterDmaCallback(dmaNo, callback, arg);
+        MIi_CallCallback(callback, arg);
+    }
+    #else
     MI_WaitDma(dmaNo);
 
     if (callback) {
@@ -481,6 +543,7 @@ void MIi_DmaSend32Async(u32 dmaNo, const void *src, volatile void *dest,
                              MI_CNT_SET_SEND32(size), MIi_DMA_MODE_NOCLEAR);
       }
     }
+    #endif
   }
 }
 
@@ -573,6 +636,18 @@ void MIi_DmaFill16Async(u32 dmaNo, void *dest, u16 data, u32 size,
   if (size == 0) {
     MIi_CallCallback(callback, arg);
   } else {
+    #ifdef SDK_PORT
+    u16 * destPtr = dest;
+    for( int i=0; i < size / 2; i++ )
+    {
+        *destPtr = data;
+        destPtr++;
+    }
+    if( callback ) {
+        OSi_EnterDmaCallback(dmaNo, callback, arg);
+        MIi_CallCallback(callback, arg);
+    }
+    #else
     MI_WaitDma(dmaNo);
 
     if (callback) {
@@ -594,6 +669,7 @@ void MIi_DmaFill16Async(u32 dmaNo, void *dest, u16 data, u32 size,
                              MIi_DMA_MODE_SRC16 | MIi_DMA_MODE_NOCLEAR);
       }
     }
+    #endif
   }
 }
 
@@ -612,6 +688,14 @@ void MIi_DmaCopy16Async(u32 dmaNo, const void *src, void *dest, u32 size,
   if (size == 0) {
     MIi_CallCallback(callback, arg);
   } else {
+    #ifdef SDK_PORT
+    memcpy(dest, src, size);
+    if( callback )
+    {
+        OSi_EnterDmaCallback(dmaNo, callback, arg);
+        MIi_CallCallback(callback, arg);
+    }
+    #else
     MI_WaitDma(dmaNo);
 
     if (callback) {
@@ -632,6 +716,7 @@ void MIi_DmaCopy16Async(u32 dmaNo, const void *src, void *dest, u32 size,
                              MI_CNT_SET_COPY16(size), MIi_DMA_MODE_NOCLEAR);
       }
     }
+    #endif
   }
 }
 
@@ -651,6 +736,14 @@ void MIi_DmaSend16Async(u32 dmaNo, const void *src, volatile void *dest,
   if (size == 0) {
     MIi_CallCallback(callback, arg);
   } else {
+    #ifdef SDK_PORT
+    memcpy( dest, src, size );
+    if( callback )
+    {
+        OSi_EnterDmaCallback(dmaNo, callback, arg);
+        MIi_CallCallback(callback, arg);
+    }
+    #else
     MI_WaitDma(dmaNo);
 
     if (callback) {
@@ -671,6 +764,7 @@ void MIi_DmaSend16Async(u32 dmaNo, const void *src, volatile void *dest,
                              MI_CNT_SET_SEND16(size), MIi_DMA_MODE_NOCLEAR);
       }
     }
+    #endif
   }
 }
 
@@ -756,11 +850,16 @@ BOOL MI_IsDmaBusy(u32 dmaNo) {
   vu32 *dmaCntp = (vu32 *)MI_DMA_REGADDR(dmaNo, MI_DMA_REG_CNT_WOFFSET);
 
   MIi_ASSERT_DMANO(dmaNo);
+  #ifdef SDK_PORT
+  return FALSE;
+  #else
   return (BOOL)((*(vu32 *)dmaCntp & REG_MI_DMA0CNT_E_MASK) >>
                 REG_MI_DMA0CNT_E_SHIFT);
+  #endif
 }
 
 void MI_WaitDma(u32 dmaNo) {
+  #ifndef SDK_PORT
   OSIntrMode enabled = OS_DisableInterrupts();
   vu32 *dmaCntp = (vu32 *)MI_DMA_REGADDR(dmaNo, MI_DMA_REG_CNT_WOFFSET);
 
@@ -776,6 +875,7 @@ void MI_WaitDma(u32 dmaNo) {
   }
 
   (void)OS_RestoreInterrupts(enabled);
+  #endif
 }
 
 void MI_StopDma(u32 dmaNo) {

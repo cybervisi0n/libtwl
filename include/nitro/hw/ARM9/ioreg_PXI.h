@@ -10,6 +10,10 @@
 extern "C" {
 #endif
 
+#ifdef SDK_PORT
+#error For ARM9 only!
+#endif
+
 #define REG_SUBPINTF_OFFSET 0x180
 #define REG_SUBPINTF_ADDR (HW_REG_BASE + REG_SUBPINTF_OFFSET)
 #define reg_PXI_SUBPINTF (*(REGType16v *)REG_SUBPINTF_ADDR)

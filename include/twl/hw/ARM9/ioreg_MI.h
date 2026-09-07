@@ -6,6 +6,10 @@
 #include <twl/hw/ARM9/mmap_global.h>
 #endif
 
+#ifdef SDK_PORT
+#error For ARM9 only!
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
