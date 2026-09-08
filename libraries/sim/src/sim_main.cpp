@@ -1,4 +1,3 @@
-#include "twl/hw/X86/mmap_global.h"
 extern "C" void TwlMain();
 extern "C" int NitroSpMain(void *arg);
 #define SDL_MAIN_HANDLED
@@ -1053,7 +1052,7 @@ void *SIM_RenderInit(void *arg) {
     windowWidth = s_SIM_config.windowWidth;
   }
 
-  std::string windowTitle = "libtwl Application";
+  std::string windowTitle = "libntr Application";
 
   CARDRomHeader *cardHeader = (CARDRomHeader *)(HW_ROM_HEADER_BUF);
 
@@ -2154,8 +2153,6 @@ int main(int argc, char *argv[]) {
   const char *makerCode = LIBNTR_CARD_MAKER_CODE;
   strncpy((char *)&cardHeader->maker_code, makerCode, sizeof(u16));
 #endif
-
-  void * test = (void *)HW_MAIN_MEM_SHARED;
 
   memset((void *)HW_MAIN_MEM_SHARED, 0, 0x160);
 

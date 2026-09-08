@@ -66,6 +66,24 @@ void G3i_LookAt_(const VecFx32 *camPos, const VecFx32 *camUp,
 }
 
 void G3_RotX(fx32 s, fx32 c) {
+    #ifdef SDK_PORT
+    draw_msg_t * msg;
+    msg = malloc( sizeof( draw_msg_t ) );
+
+    msg->type = DRAW_CMD_G3_MTXMULT33;
+    msg->data.mtx33._00 = FX32_ONE;
+    msg->data.mtx33._01 = 0;
+    msg->data.mtx33._02 = 0;
+    msg->data.mtx33._10 = 0;
+    msg->data.mtx33._11 = c;
+    msg->data.mtx33._12 = s;
+    msg->data.mtx33._20 = 0;
+    msg->data.mtx33._21 = -s;
+    msg->data.mtx33._22 = c;
+
+    SIM_HandleG3Command( msg );
+    free( msg );
+    #else
   vs32 *p = (vs32 *)&reg_G3_MTX_MULT_3x3;
 
   SDK_MINMAX_ASSERT(s, -FX32_ONE, FX32_ONE);
@@ -80,9 +98,28 @@ void G3_RotX(fx32 s, fx32 c) {
   *p = 0;        // _20
   *p = -s;       // _21
   *p = c;        // _22
+  #endif
 }
 
 void G3_RotY(fx32 s, fx32 c) {
+    #ifdef SDK_PORT
+    draw_msg_t * msg;
+    msg = malloc( sizeof( draw_msg_t ) );
+
+    msg->type = DRAW_CMD_G3_MTXMULT33;
+    msg->data.mtx33._00 = c;
+    msg->data.mtx33._01 = 0;
+    msg->data.mtx33._02 = -s;
+    msg->data.mtx33._10 = 0;
+    msg->data.mtx33._11 = FX32_ONE;
+    msg->data.mtx33._12 = 0;
+    msg->data.mtx33._20 = s;
+    msg->data.mtx33._21 = 0;
+    msg->data.mtx33._22 = c;
+
+    SIM_HandleG3Command( msg );
+    free( msg );
+    #else
   vs32 *p = (vs32 *)&reg_G3_MTX_MULT_3x3;
 
   SDK_MINMAX_ASSERT(s, -FX32_ONE, FX32_ONE);
@@ -97,9 +134,28 @@ void G3_RotY(fx32 s, fx32 c) {
   *p = s;        // _20
   *p = 0;        // _21
   *p = c;        // _22
+  #endif
 }
 
 void G3_RotZ(fx32 s, fx32 c) {
+    #ifdef SDK_PORT
+    draw_msg_t * msg;
+    msg = malloc( sizeof( draw_msg_t ) );
+
+    msg->type = DRAW_CMD_G3_MTXMULT33;
+    msg->data.mtx33._00 = c;
+    msg->data.mtx33._01 = s;
+    msg->data.mtx33._02 = 0;
+    msg->data.mtx33._10 = -s;
+    msg->data.mtx33._11 = c;
+    msg->data.mtx33._12 = 0;
+    msg->data.mtx33._20 = 0;
+    msg->data.mtx33._21 = 0;
+    msg->data.mtx33._22 = FX32_ONE;
+
+    SIM_HandleG3Command( msg );
+    free( msg );
+    #else
   vs32 *p = (vs32 *)&reg_G3_MTX_MULT_3x3;
 
   SDK_MINMAX_ASSERT(s, -FX32_ONE, FX32_ONE);
@@ -114,6 +170,7 @@ void G3_RotZ(fx32 s, fx32 c) {
   *p = 0;        // _20
   *p = 0;        // _21
   *p = FX32_ONE; // _22
+  #endif
 }
 
 void G3_LoadTexMtxTexCoord(const MtxFx44 *mtx) {

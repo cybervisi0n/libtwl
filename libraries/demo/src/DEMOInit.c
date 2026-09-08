@@ -161,6 +161,9 @@ void DEMOInitDisplay3D(void) {
                        GX_BLEND_PLANEMASK_BG2 | GX_BLEND_PLANEMASK_BG3 |
                        GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD,
                    16, 0);
+  #ifdef SDK_PORT
+  G2_BlendNone();
+  #endif
 
   G3_SwapBuffers(GX_SORTMODE_AUTO, GX_BUFFERMODE_W);
 
